@@ -1,0 +1,123 @@
+/* Small additions on top of the original Tokyo theme stylesheet for
+   the few bits that don't exist in the template (tool badges, modal
+   close button, publication summaries). Everything else reuses the
+   theme's own CSS untouched. */
+
+/* Section titles are semantically h2 (the page's one h1 is the name on
+   Home), but keep the theme's original h3 visual size. */
+.tokyo_tm_title h2 {
+  font-weight: 800;
+  font-family: "Montserrat";
+  font-size: 30px;
+}
+
+.tool_badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+.tool_badge {
+  padding: 8px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 30px;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+/* Equal-size cards: the theme's own CSS only stretches cards to match
+   *within a flex row* (services) or not at all (news, which floats).
+   The original demo happened to look uniform because every card used
+   the same placeholder sentence; with real content of different
+   lengths, min-height + line-clamp keeps every card the same size
+   regardless of row or content length, without changing the theme's
+   layout, spacing, or typography. */
+.tokyo_tm_services .list ul li .list_inner {
+  display: flex;
+  flex-direction: column;
+}
+.tokyo_tm_services .list ul li .text {
+  min-height: 4.5em;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tokyo_tm_services .list ul li .tokyo_tm_read_more {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.tokyo_tm_news ul {
+  display: flex;
+  flex-wrap: wrap;
+}
+.tokyo_tm_news ul li {
+  display: flex;
+}
+.tokyo_tm_news ul li .list_inner {
+  display: flex;
+  flex-direction: column;
+}
+.tokyo_tm_news ul li .details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+/* A flex row only stretches cards to match siblings *in that row* — with
+   an odd number of posts, the last row can have just one card, so it
+   won't be forced to match the row above. An explicit height, not just
+   min-height, guarantees every card matches regardless of row. */
+.tokyo_tm_news ul li .list_inner {
+  height: 540px;
+}
+.tokyo_tm_news ul li .details .date {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.publication_title {
+  min-height: 2.6em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tokyo_tm_news ul li .tokyo_tm_read_more {
+  margin-top: auto;
+}
+
+/* The theme's own .close/.box_inner CSS (style.css) already renders the
+   close button correctly: .box_inner has `transform: translateX(-50%)`,
+   which — like the Portfolio hover-tooltip bug fixed elsewhere in this
+   project — makes it the containing block for its `position: fixed`
+   .close child, placing the button just outside the white box, over the
+   dark backdrop (hence the theme's white-on-white-bordered icon: it isn't
+   over white at all). An earlier version of this file mistakenly "fixed"
+   a close button that *was* rendering inside the box — actually caused by
+   .popup_details/.service_popup_informations missing the .description_wrap
+   wrapper both use in the original markup — by repositioning and
+   recoloring it instead of adding that wrapper. Restored here; the
+   fix-that-should-have-been is the .description_wrap element in each
+   section's JSX (Portfolio/Service/Publications), which also brings back
+   the scroll region and top/bottom white fade edges the theme defines for
+   it. Only the icon itself is swapped for react-icons' FaTimes, since the
+   original's icon font (fontello) isn't bundled in this project. */
+/* Portfolio filter-tab transition: the original theme uses Isotope for
+   this (tokyo_tm_portfolio() in init.js), animating the grid over 750ms on
+   every filter click rather than swapping instantly. Portfolio.jsx times a
+   plain opacity cross-fade to the same 750ms (375ms out, swap, 375ms in) —
+   a lighter substitute for pulling in a masonry layout engine. */
+.tokyo_tm_portfolio .portfolio_list {
+  transition: opacity 0.375s linear;
+}
+.tokyo_tm_portfolio .portfolio_list.fading {
+  opacity: 0;
+}
+
+.tokyo_tm_modalbox .close a svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}

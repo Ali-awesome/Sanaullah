@@ -1,0 +1,21 @@
+# Netlify site settings (frontend only — see the README for backend options).
+# If you'd rather set these in the Netlify UI instead of this file, that's
+# equally fine; this file just makes them reproducible/version-controlled.
+
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+# Optional: proxy /api/* on your Netlify domain straight to a backend
+# deployed elsewhere (e.g. Vercel Functions). This lets the frontend keep
+# calling relative "/api/..." paths — the same pattern as the local Vite
+# dev proxy — so you can leave VITE_API_BASE_URL unset, and it also sidesteps
+# CORS entirely since the browser only ever talks to your Netlify domain.
+# Replace the URL below with your real backend, then uncomment:
+#
+# [[redirects]]
+#   from = "/api/*"
+#   to = "https://your-backend.vercel.app/api/:splat"
+#   status = 200
+#   force = true
