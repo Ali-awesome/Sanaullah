@@ -75,7 +75,7 @@ function PortfolioApp() {
     return (
       <>
         <Preloader />
-        <div style={{ padding: 40, color: "#fff", background: "#141414", minHeight: "100vh" }}>
+        <div className="min-h-screen bg-[#141414] p-10 text-white">
           Could not reach the API. Please start the backend (see README).
           <br />
           <small>{error}</small>
@@ -88,7 +88,7 @@ function PortfolioApp() {
     return (
       <>
         <Preloader />
-        <div style={{ padding: 40, color: "#fff", background: "#141414", minHeight: "100vh" }}>Loading…</div>
+        <div className="min-h-screen bg-[#141414] p-10 text-white">Loading…</div>
       </>
     );
   }
@@ -105,12 +105,17 @@ function PortfolioApp() {
   };
 
   return (
-    <div className="tokyo_tm_all_wrap" data-magic-cursor="show" data-enter="fadeInLeft" data-exit="">
+    <div
+      className="tokyo_tm_all_wrap relative float-left h-auto w-full clear-both"
+      data-magic-cursor="show"
+      data-enter="fadeInLeft"
+      data-exit=""
+    >
       <Preloader />
       <Sidebar profile={profile} active={active} onNavigate={setActive} />
 
-      <div className="rightpart">
-        <div className="rightpart_in">
+      <div className="rightpart relative float-left min-h-screen w-full bg-[#f8f8f8] pl-[450px] max-xl:pl-[350px] max-lg:pl-0">
+        <div className="rightpart_in relative float-left min-h-screen w-full clear-both border-l border-[#ebebeb] max-lg:border-l-0">
           <div id="home" className={sectionClass("home")}>
             <Home profile={profile} />
           </div>

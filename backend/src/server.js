@@ -8,7 +8,7 @@ import { InMemoryBlogPostRepository } from "./infrastructure/repositories/InMemo
 import { MongoGalleryPhotoRepository } from "./infrastructure/repositories/MongoGalleryPhotoRepository.js";
 import { InMemoryGalleryPhotoRepository } from "./infrastructure/repositories/InMemoryGalleryPhotoRepository.js";
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 async function main() {
   const connected = await tryConnectMongo(process.env.MONGODB_URI);

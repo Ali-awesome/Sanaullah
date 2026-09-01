@@ -1,8 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   // Vercel/Netlify serve from a domain root ("/"), so the default is
   // correct there. A GitHub Pages *project* site is served from
   // "/<repo-name>/" instead — set VITE_BASE_PATH="/<repo-name>/" only
@@ -11,7 +12,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/api": "http://localhost:5000",
+      "/api": "http://localhost:5001",
     },
   },
   test: {

@@ -87,244 +87,282 @@ export default function Portfolio({ profile, gallery = [] }) {
   // padding/width calculation in the modal markup assumes border-box).
   return (
     <>
-    <div className="container">
-      <div className="tokyo_tm_portfolio">
-        <div className="tokyo_tm_title">
-          <div className="title_flex">
-            <div className="left">
-              <span>Portfolio</span>
-              <h2>Featured Work</h2>
-            </div>
-            <div className="portfolio_filter">
-              <ul>
-                {categories.map((c) => (
-                  <li key={c}>
-                    <a
-                      href="#"
-                      className={filter === c ? "current" : ""}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setFilter(c);
-                      }}
-                    >
-                      {c}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+      <div className="container">
+        <div className="tokyo_tm_portfolio float-left w-full pb-10 pt-[100px] max-lg:pt-[130px]">
+          <div className="tokyo_tm_title">
+            <div className="title_flex">
+              <div className="left">
+                <span>Portfolio</span>
+                <h2>Featured Work</h2>
+              </div>
+              <div className="portfolio_filter max-md:pt-12">
+                <ul className="m-0 list-none">
+                  {categories.map((c) => (
+                    <li key={c} className="mr-[25px] inline-block last:mr-0">
+                      <a
+                        href="#"
+                        className={`inline-block font-heading font-medium transition-colors duration-300 ease-in-out ${
+                          filter === c ? "text-black" : "text-[#767676] hover:text-black"
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilter(c);
+                        }}
+                      >
+                        {c}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="list_wrapper">
-          <ul className={`portfolio_list gallery_zoom${fading ? " fading" : ""}`}>
-            {isGallery
-              ? items.map((photo) => (
-                  <li key={photo.id}>
-                    <div className="inner">
-                      <div
-                        className="entry tokyo_tm_portfolio_animation_wrap"
-                        data-title={photo.name}
-                        onMouseEnter={() => setHovered({ title: photo.name })}
-                        onMouseMove={handleMove}
-                        onMouseLeave={() => setHovered(null)}
-                      >
-                        <a
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setSelectedPhoto(photo);
-                          }}
+          <div className="list_wrapper float-left clear-both w-full">
+            <ul
+              className={`portfolio_list -ml-10 flex list-none flex-wrap transition-opacity duration-[375ms] ${
+                fading ? "opacity-0" : "opacity-100"
+              }`}
+            >
+              {isGallery
+                ? items.map((photo) => (
+                    <li key={photo.id} className="mb-10 w-1/3 pl-10 max-sm:w-full max-sm:pl-0">
+                      <div className="inner group relative float-left clear-both w-full overflow-hidden">
+                        <div
+                          className="relative"
+                          data-title={photo.name}
+                          onMouseEnter={() => setHovered({ title: photo.name })}
+                          onMouseMove={handleMove}
+                          onMouseLeave={() => setHovered(null)}
                         >
-                          <img src="/img/thumbs/1-1.jpg" alt="" />
-                          <div className="abs_image" style={{ backgroundImage: `url(${photo.image})` }}></div>
-                        </a>
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setSelectedPhoto(photo);
+                            }}
+                          >
+                            <img src="/img/thumbs/1-1.jpg" alt="" className="min-w-full opacity-0" />
+                            <div
+                              className="abs_image absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-300 ease-in-out group-hover:scale-110"
+                              style={{ backgroundImage: `url(${photo.image})` }}
+                            ></div>
+                          </a>
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                ))
-              : items.map((item) => (
-                  <li key={item.slug}>
-                    <div className="inner">
-                      <div
-                        className="entry tokyo_tm_portfolio_animation_wrap"
-                        data-title={item.title}
-                        data-category={item.category}
-                        onMouseEnter={() => setHovered({ title: item.title, category: item.category })}
-                        onMouseMove={handleMove}
-                        onMouseLeave={() => setHovered(null)}
-                      >
-                        <a
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setSelectedProject(item);
-                          }}
+                    </li>
+                  ))
+                : items.map((item) => (
+                    <li key={item.slug} className="mb-10 w-1/3 pl-10 max-sm:w-full max-sm:pl-0">
+                      <div className="inner group relative float-left clear-both w-full overflow-hidden">
+                        <div
+                          className="relative"
+                          data-title={item.title}
+                          data-category={item.category}
+                          onMouseEnter={() => setHovered({ title: item.title, category: item.category })}
+                          onMouseMove={handleMove}
+                          onMouseLeave={() => setHovered(null)}
                         >
-                          <img src="/img/thumbs/1-1.jpg" alt="" />
-                          <div className="abs_image" style={{ backgroundImage: `url(${item.image})` }}></div>
-                        </a>
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setSelectedProject(item);
+                            }}
+                          >
+                            <img src="/img/thumbs/1-1.jpg" alt="" className="min-w-full opacity-0" />
+                            <div
+                              className="abs_image absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-300 ease-in-out group-hover:scale-110"
+                              style={{ backgroundImage: `url(${item.image})` }}
+                            ></div>
+                          </a>
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                ))}
-          </ul>
+                    </li>
+                  ))}
+            </ul>
+          </div>
         </div>
       </div>
-    </div>
 
-    {portalTarget && createPortal(
-      <div className={`tokyo_tm_portfolio_titles${hovered ? " visible" : ""}`} ref={tooltipRef}>
-        {hovered?.title}
-        {hovered?.category && <span className="work__cat">{hovered.category}</span>}
-      </div>,
-      portalTarget
-    )}
+      {portalTarget &&
+        createPortal(
+          <div className={`tokyo_tm_portfolio_titles${hovered ? " visible" : ""}`} ref={tooltipRef}>
+            {hovered?.title}
+            {hovered?.category && <span className="work__cat">{hovered.category}</span>}
+          </div>,
+          portalTarget
+        )}
 
-    {/* Matches the original theme's "Detail" popup style exactly (verified
+      {/* Matches the original theme's "Detail" popup style exactly (verified
           against the live template): a full-width hero image, title +
           category, a two-column text/detail-list body (Client, Category,
           Date, Share), and an optional additional-images strip. The strip
           only renders when a project actually supplies extra images — none
           of ours do, so it's structurally present but stays invisible
           rather than filling the space with unrelated stock photos. */}
-    {/* This shell renders unconditionally from first mount (matching the
-        original theme's own markup, which always has the popup div in the
-        DOM, hidden by .tokyo_tm_modalbox's own CSS) so the "opened" class
-        always has a previously-painted closed state to transition from —
-        see useModalTransition for why that matters. Only the inner
-        content is conditional, gated on displayedProject. */}
-    {portalTarget && createPortal(
-      <div
-        className={`tokyo_tm_modalbox${projectOpen ? " opened" : ""}`}
-        onClick={() => setSelectedProject(null)}
-      >
-        <div className="box_inner" onClick={(e) => e.stopPropagation()}>
-          <div className="close">
-            <a href="#" onClick={(e) => { e.preventDefault(); setSelectedProject(null); }} aria-label="Close">
-              <FaTimes />
-            </a>
-          </div>
-          {displayedProject && (
-            <div className="description_wrap">
-              <div className="popup_details">
-                <div className="top_image">
-                  <img src="/img/thumbs/4-2.jpg" alt="" />
-                  <div className="main" style={{ backgroundImage: `url(${displayedProject.image})` }}></div>
-                </div>
-                <div className="portfolio_main_title">
-                  <h3>{displayedProject.title}</h3>
-                  <span>{displayedProject.category}</span>
-                </div>
-                <div className="main_details">
-                  <div className="textbox">
-                    <p>{displayedProject.summary}</p>
-                    {displayedProject.link && (
-                      <p>
-                        <a href={displayedProject.link} target="_blank" rel="noreferrer">
-                          View publication →
-                        </a>
-                      </p>
+      {/* This shell renders unconditionally from first mount (matching the
+          original theme's own markup, which always has the popup div in the
+          DOM, hidden by .tokyo_tm_modalbox's own CSS) so the "opened" class
+          always has a previously-painted closed state to transition from —
+          see useModalTransition for why that matters. Only the inner
+          content is conditional, gated on displayedProject. */}
+      {portalTarget &&
+        createPortal(
+          <div className={`tokyo_tm_modalbox${projectOpen ? " opened" : ""}`} onClick={() => setSelectedProject(null)}>
+            <div className="box_inner" onClick={(e) => e.stopPropagation()}>
+              <div className="close">
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSelectedProject(null);
+                  }}
+                  aria-label="Close"
+                >
+                  <FaTimes />
+                </a>
+              </div>
+              {displayedProject && (
+                <div className="description_wrap">
+                  <div className="popup_details float-left clear-both w-full">
+                    <div className="top_image relative mb-[37px] overflow-hidden">
+                      <img src="/img/thumbs/4-2.jpg" alt="" className="relative min-w-full opacity-0" />
+                      <div
+                        className="main absolute inset-0 bg-cover bg-center bg-no-repeat"
+                        style={{ backgroundImage: `url(${displayedProject.image})` }}
+                      ></div>
+                    </div>
+                    <div className="portfolio_main_title float-left mb-7 w-full">
+                      <h3 className="text-[23px] font-bold max-sm:text-xl">{displayedProject.title}</h3>
+                      <span>{displayedProject.category}</span>
+                    </div>
+                    <div className="main_details mb-[90px] flex w-full clear-both max-lg:flex-col">
+                      <div className="textbox w-[70%] pr-10 max-lg:mb-[30px] max-lg:w-full max-lg:pr-0">
+                        <p className="mb-[18px] last:mb-0">{displayedProject.summary}</p>
+                        {displayedProject.link && (
+                          <p className="mb-[18px] last:mb-0">
+                            <a href={displayedProject.link} target="_blank" rel="noreferrer">
+                              View publication →
+                            </a>
+                          </p>
+                        )}
+                      </div>
+                      <div className="detailbox w-[30%] pl-10 max-lg:w-full max-lg:pl-0">
+                        <ul className="m-0 list-none">
+                          <li className="float-left mb-2 w-full last:mb-0">
+                            <span className="first mb-[3px] block font-bold text-black">Client</span>
+                            <span className="text-[#767676]">{displayedProject.client}</span>
+                          </li>
+                          <li className="float-left mb-2 w-full last:mb-0">
+                            <span className="first mb-[3px] block font-bold text-black">Category</span>
+                            <span className="text-[#767676]">{displayedProject.category}</span>
+                          </li>
+                          <li className="float-left mb-2 w-full last:mb-0">
+                            <span className="first mb-[3px] block font-bold text-black">Date</span>
+                            <span className="text-[#767676]">{displayedProject.date}</span>
+                          </li>
+                          <li className="float-left mb-2 w-full last:mb-0">
+                            <span className="first mb-[3px] block font-bold text-black">Share</span>
+                            <ul className="share relative top-[7px] m-0 list-none">
+                              {(() => {
+                                const s = shareLinks(displayedProject.title);
+                                return (
+                                  <>
+                                    <li className="mr-[5px] inline-block last:mr-0">
+                                      <a href={s.facebook} target="_blank" rel="noreferrer" aria-label="Share on Facebook" className="text-lg text-black">
+                                        <FaFacebookSquare />
+                                      </a>
+                                    </li>
+                                    <li className="mr-[5px] inline-block last:mr-0">
+                                      <a href={s.twitter} target="_blank" rel="noreferrer" aria-label="Share on X" className="text-lg text-black">
+                                        <FaTwitterSquare />
+                                      </a>
+                                    </li>
+                                    <li className="mr-[5px] inline-block last:mr-0">
+                                      <a href={s.linkedin} target="_blank" rel="noreferrer" aria-label="Share on LinkedIn" className="text-lg text-black">
+                                        <FaLinkedin />
+                                      </a>
+                                    </li>
+                                  </>
+                                );
+                              })()}
+                            </ul>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                    {displayedProject.images?.length > 0 && (
+                      <div className="additional_images float-left clear-both w-full">
+                        <ul className="-ml-[30px] list-none max-lg:ml-0">
+                          {displayedProject.images.map((img, i) => (
+                            <li
+                              key={i}
+                              className="float-left mb-[30px] w-1/2 pl-[30px] [&:nth-child(3n+1)]:w-full max-lg:w-full max-lg:pl-0"
+                            >
+                              <div className="list_inner float-left clear-both w-full">
+                                <div className="my_image relative">
+                                  <img src="/img/thumbs/4-2.jpg" alt="" className="min-w-full opacity-0" />
+                                  <div
+                                    className="main absolute inset-0 bg-cover bg-center bg-no-repeat"
+                                    style={{ backgroundImage: `url(${img})` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
                   </div>
-                  <div className="detailbox">
-                    <ul>
-                      <li>
-                        <span className="first">Client</span>
-                        <span>{displayedProject.client}</span>
-                      </li>
-                      <li>
-                        <span className="first">Category</span>
-                        <span>{displayedProject.category}</span>
-                      </li>
-                      <li>
-                        <span className="first">Date</span>
-                        <span>{displayedProject.date}</span>
-                      </li>
-                      <li>
-                        <span className="first">Share</span>
-                        <ul className="share">
-                          {(() => {
-                            const s = shareLinks(displayedProject.title);
-                            return (
-                              <>
-                                <li>
-                                  <a href={s.facebook} target="_blank" rel="noreferrer" aria-label="Share on Facebook">
-                                    <FaFacebookSquare />
-                                  </a>
-                                </li>
-                                <li>
-                                  <a href={s.twitter} target="_blank" rel="noreferrer" aria-label="Share on X">
-                                    <FaTwitterSquare />
-                                  </a>
-                                </li>
-                                <li>
-                                  <a href={s.linkedin} target="_blank" rel="noreferrer" aria-label="Share on LinkedIn">
-                                    <FaLinkedin />
-                                  </a>
-                                </li>
-                              </>
-                            );
-                          })()}
-                        </ul>
-                      </li>
-                    </ul>
-                  </div>
                 </div>
-                {displayedProject.images?.length > 0 && (
-                  <div className="additional_images">
-                    <ul>
-                      {displayedProject.images.map((img, i) => (
-                        <li key={i}>
-                          <div className="list_inner">
-                            <div className="my_image">
-                              <img src="/img/thumbs/4-2.jpg" alt="" />
-                              <div className="main" style={{ backgroundImage: `url(${img})` }}></div>
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>,
-      portalTarget
-    )}
+          </div>,
+          portalTarget
+        )}
 
-    {/* Gallery photos are simple admin-uploaded images (name + picture),
-        not portfolio projects — so this reuses the same Detail chrome
-        (hero image, description_wrap scroll/fade) without the Client/
-        Category/Date/Share list that only makes sense for real projects.
-        Shell renders unconditionally from first mount, same as above. */}
-    {portalTarget && createPortal(
-      <div className={`tokyo_tm_modalbox${photoOpen ? " opened" : ""}`} onClick={() => setSelectedPhoto(null)}>
-        <div className="box_inner" onClick={(e) => e.stopPropagation()}>
-          <div className="close">
-            <a href="#" onClick={(e) => { e.preventDefault(); setSelectedPhoto(null); }} aria-label="Close">
-              <FaTimes />
-            </a>
-          </div>
-          {displayedPhoto && (
-            <div className="description_wrap">
-              <div className="popup_details">
-                <div className="top_image">
-                  <img src="/img/thumbs/4-2.jpg" alt="" />
-                  <div className="main" style={{ backgroundImage: `url(${displayedPhoto.image})` }}></div>
-                </div>
-                <div className="portfolio_main_title">
-                  <h3>{displayedPhoto.name}</h3>
-                </div>
+      {/* Gallery photos are simple admin-uploaded images (name + picture),
+          not portfolio projects — so this reuses the same Detail chrome
+          (hero image, description_wrap scroll/fade) without the Client/
+          Category/Date/Share list that only makes sense for real projects.
+          Shell renders unconditionally from first mount, same as above. */}
+      {portalTarget &&
+        createPortal(
+          <div className={`tokyo_tm_modalbox${photoOpen ? " opened" : ""}`} onClick={() => setSelectedPhoto(null)}>
+            <div className="box_inner" onClick={(e) => e.stopPropagation()}>
+              <div className="close">
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSelectedPhoto(null);
+                  }}
+                  aria-label="Close"
+                >
+                  <FaTimes />
+                </a>
               </div>
+              {displayedPhoto && (
+                <div className="description_wrap">
+                  <div className="popup_details float-left clear-both w-full">
+                    <div className="top_image relative mb-[37px] overflow-hidden">
+                      <img src="/img/thumbs/4-2.jpg" alt="" className="relative min-w-full opacity-0" />
+                      <div
+                        className="main absolute inset-0 bg-cover bg-center bg-no-repeat"
+                        style={{ backgroundImage: `url(${displayedPhoto.image})` }}
+                      ></div>
+                    </div>
+                    <div className="portfolio_main_title float-left w-full">
+                      <h3 className="text-[23px] font-bold max-sm:text-xl">{displayedPhoto.name}</h3>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>,
-      portalTarget
-    )}
+          </div>,
+          portalTarget
+        )}
     </>
   );
 }

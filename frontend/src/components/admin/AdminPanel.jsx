@@ -11,6 +11,13 @@ import {
 
 const TOKEN_KEY = "portfolio_admin_token";
 
+const inputClass =
+  "mb-3 block w-full rounded-md border border-[#ddd] px-3 py-[10px] font-[inherit] text-[15px] focus:border-black/50 focus:outline-none";
+const buttonClass =
+  "block w-full rounded-md border-none bg-black px-4 py-[10px] font-[inherit] text-white disabled:cursor-not-allowed disabled:opacity-60";
+const dangerButtonClass =
+  "h-fit rounded-md border border-[#c0392b] bg-white px-3 py-[6px] text-[#c0392b]";
+
 export default function AdminPanel() {
   const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY) || "");
   const [tokenInput, setTokenInput] = useState("");
@@ -23,20 +30,27 @@ export default function AdminPanel() {
   const [saving, setSaving] = useState(false);
   const [savingPhoto, setSavingPhoto] = useState(false);
 
+  // The contact-inbox fetch is the only one gated on the admin token — a
+  // failure there means the token itself is bad (or was revoked), so that's
+  // the only case that should log the admin out. Posts/gallery are public,
+  // unauthenticated endpoints: a transient network hiccup on either of those
+  // used to force a valid, logged-in admin back out to the token screen too.
   const load = (activeToken) => {
     setError("");
-    Promise.all([fetchContactMessages(activeToken), fetchPosts(), fetchGallery()])
-      .then(([m, p, g]) => {
-        setMessages(m);
-        setPosts(p);
-        setGallery(g);
-      })
+    fetchContactMessages(activeToken)
+      .then(setMessages)
       .catch((err) => {
         setError(err.message);
         setMessages(null);
         sessionStorage.removeItem(TOKEN_KEY);
         setToken("");
       });
+    fetchPosts()
+      .then(setPosts)
+      .catch((err) => setError(err.message));
+    fetchGallery()
+      .then(setGallery)
+      .catch((err) => setError(err.message));
   };
 
   useEffect(() => {
@@ -107,155 +121,155 @@ export default function AdminPanel() {
 
   if (!token) {
     return (
-      <div style={styles.page}>
-        <form style={styles.card} onSubmit={handleLogin}>
-          <h2 style={styles.h2}>Admin Login</h2>
-          <p style={styles.muted}>Enter the ADMIN_TOKEN configured on the backend.</p>
+      <div className="flex min-h-screen justify-center bg-[#f8f8f8] p-10 font-sans">
+        <form className="h-fit w-full max-w-[400px] rounded-lg bg-white p-[30px]" onSubmit={handleLogin}>
+          <h2 className="mb-[10px] mt-0 text-2xl font-semibold">Admin Login</h2>
+          <p className="mb-3 text-sm text-[#767676]">Enter the ADMIN_TOKEN configured on the backend.</p>
           <input
-            style={styles.input}
+            className={inputClass}
             type="password"
             placeholder="Admin token"
             value={tokenInput}
             onChange={(e) => setTokenInput(e.target.value)}
           />
-          <button style={styles.button} type="submit">
+          <button className={buttonClass} type="submit">
             Enter
           </button>
-          {error && <p style={styles.error}>{error}</p>}
+          {error && <p className="text-sm text-[#c0392b]">{error}</p>}
         </form>
       </div>
     );
   }
 
   return (
-    <div style={styles.page}>
-      <div style={{ ...styles.card, maxWidth: 900 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={styles.h2}>Admin Panel</h2>
-          <button style={styles.linkButton} onClick={handleLogout}>
+    <div className="flex min-h-screen justify-center bg-[#f8f8f8] p-10 font-sans">
+      <div className="h-fit w-full max-w-[900px] rounded-lg bg-white p-[30px]">
+        <div className="flex items-center justify-between">
+          <h2 className="mb-[10px] mt-0 text-2xl font-semibold">Admin Panel</h2>
+          <button className="cursor-pointer border-none bg-transparent underline" onClick={handleLogout}>
             Log out
           </button>
         </div>
-        {error && <p style={styles.error}>{error}</p>}
+        {error && <p className="text-sm text-[#c0392b]">{error}</p>}
 
-        <section style={styles.section}>
-          <h3 style={styles.h3}>Add a Post</h3>
-          <form onSubmit={handleCreate} style={styles.form}>
+        <section className="mt-[30px] border-t border-[#eee] pt-5">
+          <h3 className="mb-3 mt-0 text-lg font-semibold">Add a Post</h3>
+          <form onSubmit={handleCreate} className="flex flex-col gap-[10px]">
             <input
-              style={styles.input}
+              className={inputClass}
               placeholder="Title"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               required
             />
             <input
-              style={styles.input}
+              className={inputClass}
               placeholder="Source (e.g. Personal Blog)"
               value={form.source}
               onChange={(e) => setForm({ ...form, source: e.target.value })}
               required
             />
             <input
-              style={styles.input}
-              placeholder="Date (e.g. September 2026)"
+              className={inputClass}
+              placeholder="Date (optional, e.g. September 2026)"
               value={form.date}
               onChange={(e) => setForm({ ...form, date: e.target.value })}
-              required
             />
             <input
-              style={styles.input}
+              className={inputClass}
               placeholder="Image path (optional, defaults provided)"
               value={form.image}
               onChange={(e) => setForm({ ...form, image: e.target.value })}
             />
             <input
-              style={styles.input}
+              className={inputClass}
               placeholder="Link (optional)"
               value={form.link}
               onChange={(e) => setForm({ ...form, link: e.target.value })}
             />
             <textarea
-              style={{ ...styles.input, minHeight: 80 }}
+              className={`${inputClass} min-h-[80px]`}
               placeholder="Summary"
               value={form.summary}
               onChange={(e) => setForm({ ...form, summary: e.target.value })}
               required
             />
-            <button style={styles.button} type="submit" disabled={saving}>
+            <button className={buttonClass} type="submit" disabled={saving}>
               {saving ? "Saving…" : "Add Post"}
             </button>
           </form>
         </section>
 
-        <section style={styles.section}>
-          <h3 style={styles.h3}>Posts ({posts ? posts.length : "…"})</h3>
+        <section className="mt-[30px] border-t border-[#eee] pt-5">
+          <h3 className="mb-3 mt-0 text-lg font-semibold">Posts ({posts ? posts.length : "…"})</h3>
           {posts?.map((p) => (
-            <div key={p.id} style={styles.row}>
+            <div key={p.id} className="flex items-start justify-between border-b border-[#f0f0f0] py-3">
               <div>
                 <strong>{p.title}</strong>
-                <div style={styles.muted}>
-                  {p.source} — {p.date}
+                <div className="text-sm text-[#767676]">
+                  {p.source}
+                  {p.date ? ` — ${p.date}` : ""}
                 </div>
               </div>
-              <button style={styles.dangerButton} onClick={() => handleDelete(p.id)}>
+              <button className={dangerButtonClass} onClick={() => handleDelete(p.id)}>
                 Delete
               </button>
             </div>
           ))}
         </section>
 
-        <section style={styles.section}>
-          <h3 style={styles.h3}>Add a Gallery Photo</h3>
-          <p style={styles.muted}>
+        <section className="mt-[30px] border-t border-[#eee] pt-5">
+          <h3 className="mb-3 mt-0 text-lg font-semibold">Add a Gallery Photo</h3>
+          <p className="mb-3 text-sm text-[#767676]">
             Shows in the Portfolio section's "All" tab. Paste a path already under frontend/public/img/ (e.g.
             /img/portfolio/7.jpg) or any image URL — see the README for how to add new image files.
           </p>
-          <form onSubmit={handleCreatePhoto} style={styles.form}>
+          <form onSubmit={handleCreatePhoto} className="flex flex-col gap-[10px]">
             <input
-              style={styles.input}
+              className={inputClass}
               placeholder="Name"
               value={photoForm.name}
               onChange={(e) => setPhotoForm({ ...photoForm, name: e.target.value })}
               required
             />
             <input
-              style={styles.input}
+              className={inputClass}
               placeholder="Image path or URL"
               value={photoForm.image}
               onChange={(e) => setPhotoForm({ ...photoForm, image: e.target.value })}
               required
             />
-            <button style={styles.button} type="submit" disabled={savingPhoto}>
+            <button className={buttonClass} type="submit" disabled={savingPhoto}>
               {savingPhoto ? "Saving…" : "Add Photo"}
             </button>
           </form>
         </section>
 
-        <section style={styles.section}>
-          <h3 style={styles.h3}>Gallery Photos ({gallery ? gallery.length : "…"})</h3>
+        <section className="mt-[30px] border-t border-[#eee] pt-5">
+          <h3 className="mb-3 mt-0 text-lg font-semibold">Gallery Photos ({gallery ? gallery.length : "…"})</h3>
           {gallery?.map((g) => (
-            <div key={g.id} style={styles.row}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <img src={g.image} alt="" style={styles.thumb} />
+            <div key={g.id} className="flex items-start justify-between border-b border-[#f0f0f0] py-3">
+              <div className="flex items-center gap-3">
+                <img src={g.image} alt="" className="h-11 w-11 rounded object-cover" />
                 <strong>{g.name}</strong>
               </div>
-              <button style={styles.dangerButton} onClick={() => handleDeletePhoto(g.id)}>
+              <button className={dangerButtonClass} onClick={() => handleDeletePhoto(g.id)}>
                 Delete
               </button>
             </div>
           ))}
         </section>
 
-        <section style={styles.section}>
-          <h3 style={styles.h3}>Contact Inbox ({messages ? messages.length : "…"})</h3>
-          {messages?.length === 0 && <p style={styles.muted}>No messages yet.</p>}
+        <section className="mt-[30px] border-t border-[#eee] pt-5">
+          <h3 className="mb-3 mt-0 text-lg font-semibold">Contact Inbox ({messages ? messages.length : "…"})</h3>
+          {messages?.length === 0 && <p className="text-sm text-[#767676]">No messages yet.</p>}
           {messages?.map((m, i) => (
-            <div key={i} style={styles.row}>
+            <div key={i} className="flex items-start justify-between border-b border-[#f0f0f0] py-3">
               <div>
                 <strong>
                   {m.name} &lt;{m.email}&gt;
                 </strong>
-                <div style={styles.muted}>{new Date(m.createdAt).toLocaleString()}</div>
+                <div className="text-sm text-[#767676]">{new Date(m.createdAt).toLocaleString()}</div>
                 <p>{m.message}</p>
               </div>
             </div>
@@ -265,54 +279,3 @@ export default function AdminPanel() {
     </div>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: "100vh",
-    background: "#f8f8f8",
-    padding: "40px 20px",
-    fontFamily: "Mulish, sans-serif",
-    display: "flex",
-    justifyContent: "center",
-  },
-  card: { background: "#fff", borderRadius: 8, padding: 30, width: "100%", maxWidth: 400, height: "fit-content" },
-  h2: { margin: "0 0 10px" },
-  h3: { margin: "0 0 12px" },
-  muted: { color: "#767676", fontSize: 13 },
-  error: { color: "#c0392b", fontSize: 13 },
-  section: { marginTop: 30, borderTop: "1px solid #eee", paddingTop: 20 },
-  form: { display: "flex", flexDirection: "column", gap: 10 },
-  input: {
-    display: "block",
-    width: "100%",
-    boxSizing: "border-box",
-    padding: "10px 12px",
-    border: "1px solid #ddd",
-    borderRadius: 6,
-    font: "inherit",
-    marginBottom: 12,
-  },
-  button: {
-    display: "block",
-    width: "100%",
-    padding: "10px 16px",
-    background: "#000",
-    color: "#fff",
-    border: "none",
-    borderRadius: 6,
-    cursor: "pointer",
-    font: "inherit",
-  },
-  linkButton: { background: "none", border: "none", textDecoration: "underline", cursor: "pointer" },
-  dangerButton: {
-    padding: "6px 12px",
-    background: "#fff",
-    color: "#c0392b",
-    border: "1px solid #c0392b",
-    borderRadius: 6,
-    cursor: "pointer",
-    height: "fit-content",
-  },
-  row: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "12px 0", borderBottom: "1px solid #f0f0f0" },
-  thumb: { width: 44, height: 44, objectFit: "cover", borderRadius: 4 },
-};

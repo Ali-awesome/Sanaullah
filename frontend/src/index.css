@@ -1,0 +1,404 @@
+@import "tailwindcss";
+
+/*
+ * Tailwind theme tokens. The four custom breakpoints (768/1040/1200/1600)
+ * replace Tailwind's defaults so every `max-sm:`/`max-md:`/`max-lg:`/`max-xl:`
+ * utility used throughout the components lines up exactly with the original
+ * Tokyo theme's own `@media (max-width: ...)` breakpoints, and the handful of
+ * bespoke keyframe animations the theme relies on (none of which exist in
+ * Tailwind's defaults) are ported here verbatim so `animate-*` utilities can
+ * reference them.
+ */
+@theme {
+  --font-sans: "Mulish", sans-serif;
+  --font-heading: "Montserrat", sans-serif;
+  --font-poppins: "Poppins", sans-serif;
+
+  --breakpoint-sm: 768px;
+  --breakpoint-md: 1040px;
+  --breakpoint-lg: 1200px;
+  --breakpoint-xl: 1600px;
+
+  --animate-fade-in-left: fadeInLeft 1s both;
+  --animate-morph: morph 8s ease-in-out infinite 1s;
+}
+
+@keyframes fadeInLeft {
+  0% {
+    opacity: 0;
+    transform: translate3d(-100%, 0, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes morph {
+  0%,
+  100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+  50% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+  }
+}
+
+@layer base {
+  html {
+    overflow-x: hidden;
+  }
+  body {
+    @apply font-sans text-[15px] leading-[30px] text-[#767676];
+  }
+  body::-webkit-scrollbar {
+    width: 0px;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading font-medium leading-[1.4] text-black;
+  }
+  a {
+    @apply no-underline;
+  }
+  ::placeholder {
+    color: #6f6f6f;
+  }
+  svg {
+    fill: currentcolor;
+    width: 15px;
+    height: 15px;
+  }
+
+  /* Every padding/width calculation throughout the modal markup
+     (.description_wrap etc.) assumes border-box; this reset — and the fact
+     that modals portal into this exact element (see usePortalTarget) rather
+     than document.body — is why it must stay a global, not a Tailwind
+     utility applied per-component. */
+  .tokyo_tm_all_wrap,
+  .tokyo_tm_all_wrap * {
+    box-sizing: border-box;
+  }
+}
+
+/*
+ * Everything below is markup this app renders identically in several places
+ * (a shared card chrome, a shared modal shell, a JS-driven animation/state
+ * machine) or a small trimmed third-party library. Kept here instead of
+ * inline Tailwind utility soup to avoid repeating multi-line declarations
+ * verbatim across 3-5 components, and because a few of these encode
+ * behavior (exact keyframe timings, pseudo-element content) plain utility
+ * classes can't express. Everything else in the app is styled with Tailwind
+ * utilities directly in JSX.
+ */
+@layer components {
+  /* ---- shared section chrome (About/Service/Portfolio/News/Contact) ---- */
+  .container {
+    @apply relative clear-both mx-auto w-full max-w-[1070px] px-10 max-xl:max-w-[968px] max-md:px-5;
+  }
+  .tokyo_tm_title {
+    @apply relative float-left clear-both mb-[62px] w-full;
+  }
+  .tokyo_tm_title h2,
+  .tokyo_tm_title h3 {
+    @apply font-heading font-extrabold;
+  }
+  .tokyo_tm_title span {
+    @apply mb-[11px] inline-block bg-black/4 px-[10px] py-1 font-heading text-xs font-semibold uppercase text-[#333];
+  }
+  .tokyo_tm_title .title_flex {
+    @apply flex w-full clear-both items-end justify-between max-md:flex-col max-md:items-start;
+  }
+  .tokyo_tm_button a {
+    @apply inline-block bg-black px-10 py-[9px] pb-[14px] text-white transition-colors duration-300 ease-in-out;
+  }
+
+  /* ---- "Read more" link: theme's underline-draw hover animation ---- */
+  .tokyo_tm_read_more {
+    @apply relative float-left clear-both w-full overflow-hidden;
+  }
+  .tokyo_tm_read_more a {
+    @apply relative inline-block overflow-hidden pr-8 font-heading text-xs font-medium uppercase text-black;
+  }
+  .tokyo_tm_read_more a::before {
+    content: "";
+    @apply absolute inset-x-0 top-0 bottom-0 m-auto h-px w-full origin-left scale-x-[0.2] bg-black;
+    animation: read-more-out 0.4s cubic-bezier(0.6, 0.01, 0, 1) forwards;
+  }
+  /* The original theme's own CSS keeps this span translated off-screen at
+     rest (`transform: translateX(-110%)`) and only slides the "Read More"
+     text into view on `:hover` — invisible-until-hover CTA text, with no
+     hover state at all on touch devices, so it's never visible there. Kept
+     always visible here instead; only the underline sweep below (a purely
+     decorative flourish, not the only way to discover the link) still
+     animates on hover. */
+  .tokyo_tm_read_more a span {
+    @apply relative z-10 inline-block bg-white;
+  }
+  .group:hover .tokyo_tm_read_more a::before {
+    animation: read-more-in 0.4s cubic-bezier(0.6, 0.01, 0, 1) forwards;
+  }
+  @keyframes read-more-out {
+    0% {
+      transform-origin: right center;
+      transform: scaleX(0.2);
+    }
+    70% {
+      transform-origin: right center;
+    }
+    71% {
+      transform-origin: left center;
+      transform: scaleX(1);
+    }
+    100% {
+      transform-origin: left center;
+      transform: scaleX(0.2);
+    }
+  }
+  @keyframes read-more-in {
+    0% {
+      transform-origin: left center;
+      transform: scaleX(0.2);
+    }
+    70% {
+      transform-origin: left center;
+      transform: scaleX(1);
+    }
+    71% {
+      transform-origin: right center;
+    }
+    100% {
+      transform-origin: right center;
+      transform: scaleX(0.2);
+    }
+  }
+
+  /* ---- section-swap state machine (App.jsx sectionClass()) ---- */
+  .tokyo_tm_section {
+    @apply absolute inset-0 z-[8] overflow-hidden overflow-y-scroll opacity-0 invisible transition-[visibility,opacity] duration-1000 max-lg:pl-0;
+  }
+  .tokyo_tm_section::-webkit-scrollbar {
+    width: 0px;
+  }
+  .tokyo_tm_section.animated,
+  .tokyo_tm_section.hidden {
+    @apply z-[9];
+  }
+  .tokyo_tm_section.animated,
+  .tokyo_tm_section.active {
+    @apply visible opacity-100;
+  }
+  .tokyo_tm_section.active {
+    @apply z-10;
+  }
+  .tokyo_tm_section.fadeInLeft {
+    animation: fadeInLeft 1s both;
+  }
+
+  /* ---- intro preloader curtain (Preloader.jsx) ---- */
+  #preloader {
+    @apply fixed inset-0 z-[99999] flex h-screen w-full;
+  }
+  #preloader::before,
+  #preloader::after {
+    content: "";
+    @apply absolute left-0 top-0 z-[-1] h-full w-1/2 bg-black transition-all duration-300 ease-in-out;
+  }
+  #preloader::after {
+    @apply left-auto right-0;
+  }
+  #preloader .loader_line {
+    @apply relative m-auto h-[250px] w-px overflow-hidden transition-all duration-[800ms] ease-in-out;
+  }
+  .loader_line::before {
+    content: "";
+    @apply absolute left-0 top-1/2 h-0 w-px -translate-y-1/2 bg-white;
+    animation: line-height 1000ms ease-in-out both;
+  }
+  .loader_line::after {
+    content: "";
+    @apply absolute left-0 top-0 h-full w-px -translate-y-full bg-[#999];
+    animation: line-round 1200ms linear 2000ms infinite;
+  }
+  #preloader.preloaded .loader_line::after {
+    @apply opacity-0;
+  }
+  #preloader.preloaded .loader_line {
+    opacity: 0;
+    height: 100% !important;
+  }
+  #preloader.preloaded::before,
+  #preloader.preloaded::after {
+    animation: preloaded-zero 300ms ease-in-out 500ms forwards;
+  }
+  @keyframes line-height {
+    from {
+      height: 0%;
+    }
+    to {
+      height: 100%;
+    }
+  }
+  @keyframes line-round {
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: translateY(200%);
+    }
+  }
+  @keyframes preloaded-zero {
+    from {
+      width: 50%;
+    }
+    to {
+      width: 0%;
+    }
+  }
+
+  /* ---- magic cursor (Cursor.jsx) ---- */
+  .tokyo_tm_all_wrap[data-magic-cursor="hide"] .mouse-cursor {
+    @apply hidden;
+  }
+  .mouse-cursor {
+    @apply invisible fixed left-0 top-0 rounded-full pointer-events-none max-md:hidden;
+    transform: translateZ(0);
+  }
+  .cursor-inner {
+    @apply z-50 -ml-[3px] -mt-[3px] h-[6px] w-[6px] bg-black transition-[width,height,margin,opacity] duration-300 ease-in-out;
+  }
+  .cursor-inner.cursor-hover {
+    @apply -ml-10 -mt-10 h-20 w-20 bg-black opacity-30;
+  }
+  .cursor-outer {
+    @apply z-50 -ml-[15px] -mt-[15px] h-[30px] w-[30px] border-2 border-black opacity-50 transition-all duration-[80ms] ease-out;
+  }
+  .cursor-outer.cursor-hover {
+    @apply opacity-0;
+  }
+
+  /* ---- Hamburgers (Jonathan Suh, https://jonsuh.com/hamburgers), trimmed
+     to only the "slider" variant this app actually uses ---- */
+  .hamburger {
+    @apply inline-block cursor-pointer border-0 bg-transparent p-[15px] transition-[opacity,filter] duration-150 ease-linear;
+  }
+  .hamburger-box {
+    @apply relative inline-block h-6 w-10;
+  }
+  .hamburger-inner {
+    @apply absolute top-1/2 -mt-0.5 block h-1 w-10 rounded bg-black transition-transform duration-150 ease-in-out;
+  }
+  .hamburger-inner::before,
+  .hamburger-inner::after {
+    content: "";
+    @apply absolute block h-1 w-10 rounded bg-black transition-transform duration-150 ease-in-out;
+  }
+  .hamburger-inner::before {
+    top: -10px;
+  }
+  .hamburger-inner::after {
+    bottom: -10px;
+  }
+  .hamburger--slider .hamburger-inner {
+    top: 2px;
+  }
+  .hamburger--slider .hamburger-inner::before {
+    top: 10px;
+    transition-property: transform, opacity;
+  }
+  .hamburger--slider .hamburger-inner::after {
+    top: 20px;
+  }
+  .hamburger--slider.is-active .hamburger-inner {
+    transform: translate3d(0, 10px, 0) rotate(45deg);
+  }
+  .hamburger--slider.is-active .hamburger-inner::before {
+    opacity: 0;
+    transform: rotate(-45deg) translate3d(-5.71429px, -6px, 0);
+  }
+  .hamburger--slider.is-active .hamburger-inner::after {
+    transform: translate3d(0, -20px, 0) rotate(-90deg);
+  }
+  /* Shrunk to fit the mobile topbar (vs. the 40x24 default box) */
+  .tokyo_tm_topbar .hamburger {
+    @apply p-0;
+  }
+  .tokyo_tm_topbar .hamburger-box {
+    @apply w-[30px];
+  }
+  .tokyo_tm_topbar .hamburger-inner,
+  .tokyo_tm_topbar .hamburger-inner::before,
+  .tokyo_tm_topbar .hamburger-inner::after {
+    @apply h-0.5 w-[30px];
+  }
+
+  .tokyo_tm_mobile_menu {
+    @apply fixed top-[50px] right-[-200px] z-[15] h-screen w-[200px] bg-white transition-all duration-300 ease-in-out;
+  }
+  .tokyo_tm_mobile_menu.opened {
+    @apply right-0;
+  }
+
+  /* ---- portfolio hover tooltip (Portfolio.jsx) ---- */
+  .tokyo_tm_portfolio_titles {
+    @apply invisible fixed z-[15] whitespace-nowrap bg-white px-[15px] py-[5px] font-heading text-lg font-semibold text-black opacity-0;
+  }
+  .tokyo_tm_portfolio_titles.visible {
+    @apply visible opacity-100;
+  }
+  .tokyo_tm_portfolio_titles .work__cat {
+    @apply absolute left-0 top-full -mt-[10px] bg-white px-[15px] py-[5px] font-sans text-[15px] font-medium text-[#767676];
+  }
+
+  /* ---- shared lightbox/detail modal (Service/Portfolio x2/Publications) ---- */
+  .tokyo_tm_modalbox {
+    @apply fixed inset-x-0 top-0 z-[15] invisible h-screen bg-black/80 opacity-0 transition-all duration-300 ease-in-out;
+  }
+  .tokyo_tm_modalbox.opened {
+    @apply visible opacity-100;
+  }
+  .tokyo_tm_modalbox .container {
+    @apply h-screen;
+  }
+  .tokyo_tm_modalbox .box_inner {
+    @apply invisible absolute left-1/2 top-[70px] bottom-[70px] z-[1] mt-[-20px] w-[968px] max-lg:w-[500px] max-sm:w-[300px] -translate-x-1/2 bg-white opacity-0 transition-all duration-300 ease-in-out;
+    transition-delay: 0.3s;
+  }
+  .tokyo_tm_modalbox.opened .box_inner {
+    @apply visible mt-0 opacity-100;
+  }
+  .tokyo_tm_modalbox .close {
+    @apply fixed left-full top-0 z-10 ml-[30px] max-sm:left-auto max-sm:right-0 max-sm:top-[-40px];
+  }
+  .tokyo_tm_modalbox .close a {
+    @apply relative flex h-10 w-10 items-center justify-center rounded-[10px] border-2 border-white text-white transition-all duration-300 ease-in-out hover:rounded-full max-sm:h-[30px] max-sm:w-[30px] max-sm:text-sm;
+  }
+  .tokyo_tm_modalbox .description_wrap {
+    @apply relative float-left h-full w-full overflow-hidden overflow-y-scroll p-[50px] max-lg:p-10 max-sm:p-5;
+    scrollbar-width: thin;
+    scrollbar-color: #999 #fff;
+  }
+  .tokyo_tm_modalbox .description_wrap::-webkit-scrollbar {
+    width: 11px;
+  }
+  .tokyo_tm_modalbox .description_wrap::-webkit-scrollbar-thumb {
+    @apply rounded-md border-[3px] border-white bg-[#999];
+  }
+  .tokyo_tm_modalbox .description_wrap::before,
+  .tokyo_tm_modalbox .description_wrap::after {
+    content: "";
+    @apply fixed inset-x-0 z-[3] h-[50px] bg-white max-lg:h-10 max-sm:h-5;
+  }
+  .tokyo_tm_modalbox .description_wrap::before {
+    @apply top-0;
+  }
+  .tokyo_tm_modalbox .description_wrap::after {
+    @apply bottom-0;
+  }
+  body.modal {
+    @apply overflow-y-hidden;
+  }
+}

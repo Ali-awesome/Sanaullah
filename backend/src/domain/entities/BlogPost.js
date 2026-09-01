@@ -13,8 +13,11 @@ export class BlogPost {
 
     if (!cleanTitle) throw new DomainValidationError("Title is required.");
     if (!cleanSource) throw new DomainValidationError("Source is required.");
-    if (!cleanDate) throw new DomainValidationError("Date is required.");
     if (!cleanSummary) throw new DomainValidationError("Summary is required.");
+    // Date is optional: some entries (a course with no fixed completion
+    // date) genuinely have nothing meaningful to show here — the frontend
+    // renders the source/date line without it when it's blank, rather than
+    // forcing every post to carry a fabricated placeholder date.
 
     this.title = cleanTitle;
     this.source = cleanSource;

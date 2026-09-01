@@ -2,8 +2,14 @@
 
 A MERN rebuild of the "Tokyo" portfolio template, filled with Mohammad Sanaullah's
 real resume data (`Associate_Project_Manager_tex.pdf`) and the template's own stock
-photos/CSS. Backend follows Clean Architecture / DDD-lite; frontend is a lean React
-app that reuses the original theme's CSS untouched.
+photos. Backend follows Clean Architecture / DDD-lite; frontend is a lean React app
+styled with Tailwind CSS, reproducing the original theme's look pixel-for-pixel. A
+small hand-written CSS layer (`src/index.css`, built from Tailwind's `@theme`/
+`@layer` directives) covers the handful of things utility classes can't express on
+their own — the JS-driven section/modal/cursor animation states and their exact
+timings, a few bespoke keyframes, and a trimmed copy of the "Hamburgers" mobile-menu
+icon library — everything else is Tailwind utility classes directly in each
+component's JSX.
 
 ## Contents
 
@@ -31,7 +37,7 @@ app that reuses the original theme's CSS untouched.
 
 ```
 backend/    Node.js + Express API (domain -> application -> infrastructure -> interfaces)
-frontend/   React (Vite) SPA, using the original Tokyo theme CSS/images as-is
+frontend/   React (Vite) SPA, styled with Tailwind CSS, using the original Tokyo theme's images as-is
 ```
 
 ### Backend layers (`backend/src`)
@@ -80,12 +86,12 @@ cd Portfolio
 cd backend
 cp .env.example .env      # edit: set ADMIN_TOKEN; optionally MONGODB_URI (see below)
 npm install
-npm run dev                # http://localhost:5000
+npm run dev                # http://localhost:5001
 
 # Frontend — in a second terminal
 cd frontend
 npm install
-npm run dev                 # http://localhost:5173, proxies /api to :5000
+npm run dev                 # http://localhost:5173, proxies /api to :5001
 ```
 
 Open `http://localhost:5173`. `npm run dev` on the backend uses `node --watch`,
@@ -95,8 +101,8 @@ same for the frontend with instant HMR.
 Verify the backend independently at any time with:
 
 ```bash
-curl http://localhost:5000/health          # {"status":"ok"}
-curl http://localhost:5000/api/profile     # full profile JSON
+curl http://localhost:5001/health          # {"status":"ok"}
+curl http://localhost:5001/api/profile     # full profile JSON
 ```
 
 ## Database setup
@@ -169,7 +175,7 @@ that, it's managed entirely through the admin panel.
 
 | Variable        | Required | Default (if unset)                     | Purpose                                                        |
 |------------------|:--------:|-----------------------------------------|------------------------------------------------------------------|
-| `PORT`           | no       | `5000`                                  | Port the plain Node server listens on (irrelevant on Vercel).   |
+| `PORT`           | no       | `5001`                                  | Port the plain Node server listens on (irrelevant on Vercel).   |
 | `MONGODB_URI`    | no*      | *(none — falls back to in-memory)*      | MongoDB connection string. *Effectively required for any deployment (see [Database setup](#database-setup)). |
 | `CLIENT_ORIGIN`  | no       | `*` (any origin)                        | Allowed CORS origin(s) for the frontend. Comma-separate multiple, e.g. `https://your-site.vercel.app,https://your-site.netlify.app`. Tighten this for production. |
 | `ADMIN_TOKEN`    | yes**    | *(none — admin routes return `503`)*    | Shared secret for the admin panel (`POST/DELETE /api/posts`, `GET /api/contact`). Use a long random string (e.g. `openssl rand -hex 32`). |
@@ -257,9 +263,11 @@ render as squares and the avatar as a large circle-ish blob, both cropped via
 
 ## Responsive design
 
-The original Tokyo theme's CSS already ships a fairly complete set of breakpoints
-(1600 / 1200 / 1040 / 768px) that this rebuild reuses untouched, so most of the
-responsiveness came for free. What was added/verified on top:
+The original Tokyo theme shipped a fairly complete set of breakpoints
+(1600 / 1200 / 1040 / 768px); `src/index.css`'s `@theme` block overrides Tailwind's
+default `sm`/`md`/`lg`/`xl` breakpoints to those exact values, so every `max-sm:`/
+`max-md:`/`max-lg:`/`max-xl:` utility used throughout the components lines up with
+the theme's original responsive behavior instead of Tailwind's defaults.
 
 - Fixed two theme rendering patterns the React rewrite initially missed (an
   invisible sizing `<img>` behind the portfolio/publication background images,
@@ -269,8 +277,8 @@ responsiveness came for free. What was added/verified on top:
   (hamburger + slide-in menu), the About page's two-column-to-stacked info/skills/
   education layout, the portfolio grid (3 columns → 1 column), the detail/service
   modals, and the contact map/form all reflow correctly with no horizontal overflow.
-- The new admin panel (plain inline styles, not theme CSS) was adjusted so its
-  login/post form stacks full-width on narrow screens instead of squeezing
+- The admin panel (Tailwind utility classes, like everywhere else) was adjusted so
+  its login/post form stacks full-width on narrow screens instead of squeezing
   input+button onto one line.
 
 ## Animation & interaction fidelity
@@ -288,8 +296,8 @@ React, matching the source's exact timing/logic rather than an approximation:
 - **Section transitions** — clicking a nav item now reproduces the theme's
   `.hidden` / `.active.animated` / `.fadeInLeft` class scheme from
   `tokyo_tm_page_transition()`: the incoming section slides/fades in via
-  animate.css's `fadeInLeft` (already bundled in `plugins.css`, just unused
-  before), and — matching the original — that entrance animation does *not*
+  a `fadeInLeft` keyframe (ported from animate.css into `src/index.css`'s
+  `@theme` block), and — matching the original — that entrance animation does *not*
   play on the very first paint, only on navigations after that.
 - **Portfolio hover tooltip** — hovering a project now shows its title/category
   in a small label that follows the cursor (`tokyo_tm_portfolio_titles`),
@@ -336,7 +344,7 @@ React, matching the source's exact timing/logic rather than an approximation:
 - **Modals rendering partly behind the sidebar** — every popup (both
   Portfolio modals, Service, Publications) was nested inside its section's
   `<div id="...">`, and `.tokyo_tm_section` is `position: absolute` with its
-  own explicit `z-index` (see style.css) — which makes it a CSS stacking
+  own explicit `z-index` (see `.tokyo_tm_section` in `src/index.css`) — which makes it a CSS stacking
   context. A stacking context traps its descendants' `z-index` values so
   they only ever rank *within* it; since the section's own z-index (8–10)
   is lower than the sidebar's (`.leftpart`, 12), the whole section — modal
@@ -371,8 +379,8 @@ React, matching the source's exact timing/logic rather than an approximation:
 - **Equal-size cards** — the theme itself never forces uniform card height; the
   original demo just looked uniform because every service/news card reused
   the *same* placeholder sentence. With real content of varying length, an
-  explicit `min-height`/`height` + line-clamp was added in `custom.css` (Service
-  and Publications cards) so every card is the same size regardless of content
+  explicit `min-height`/`height` + Tailwind's `line-clamp-*` utilities were added
+  directly in `Service.jsx`/`Publications.jsx` so every card is the same size regardless of content
   length or which grid row it falls in — verified with real DOM measurements,
   not just visually (all 6 service cards: 386px; all 3 publication cards: 540px).
 
@@ -387,8 +395,8 @@ asserts on its exact class transitions at simulated timestamps instead.
   link, and a JSON-LD `Person` structured-data block in `frontend/index.html`.
 - `robots.txt` and `sitemap.xml` in `frontend/public/`.
 - Exactly one `<h1>` on the page (the name, in the Home section); every section
-  title is now an `<h2>` (was `<h3>` in the original template — a `custom.css`
-  rule keeps its original visual size while fixing the heading hierarchy).
+  title is now an `<h2>` (was `<h3>` in the original template — a Tailwind
+  utility class keeps its original visual size while fixing the heading hierarchy).
 - Descriptive `aria-label`s on the avatar and social icons for assistive tech.
 - **Caveat:** `sanaullah.dev` in `index.html`, `robots.txt`, and `sitemap.xml` is
   a placeholder — once you have a real deployed domain, replace every

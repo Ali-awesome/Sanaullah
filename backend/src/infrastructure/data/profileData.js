@@ -33,7 +33,7 @@ export const profileData = {
       right: [
         { label: "Nationality", value: "Bangladeshi" },
         { label: "Study", value: "Jahangirnagar University" },
-        { label: "Degree", value: "M.Sc. in Data Science" },
+        { label: "Degree", value: "M.Sc. in Data Science and Applied Statistics" },
         { label: "Status", value: "Open to opportunities" },
       ],
     },

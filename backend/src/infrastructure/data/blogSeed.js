@@ -18,14 +18,14 @@ export const blogSeed = [
   {
     title: "Advanced Product Management: Vision, Strategy, and Metrics",
     source: "Udemy — Course",
-    date: "Training",
+    date: "",
     image: "/img/news/2.jpg",
     summary: "Completed coursework on product vision, strategy design, and metrics-driven roadmap planning.",
   },
   {
     title: "Machine Learning Specialization",
     source: "Coursera — by Andrew Ng",
-    date: "Training",
+    date: "",
     image: "/img/news/3.jpg",
     summary: "Completed the foundational specialization covering supervised/unsupervised learning and best practices.",
   },
