@@ -11,6 +11,16 @@ describe("buildCorsOrigin", () => {
     expect(buildCorsOrigin("https://example.com")).toBe("https://example.com");
   });
 
+  it("strips a trailing slash, since a real browser Origin header never has one", () => {
+    expect(buildCorsOrigin("https://example.com/")).toBe("https://example.com");
+    expect(buildCorsOrigin("https://a.com/, https://b.com/")).toBeInstanceOf(Function);
+
+    const validate = buildCorsOrigin("https://a.com/, https://b.com/");
+    let allowed;
+    validate("https://a.com", (err, ok) => (allowed = ok));
+    expect(allowed).toBe(true);
+  });
+
   it("returns a validator function for a comma-separated list, allowing only listed origins", () => {
     const validate = buildCorsOrigin("https://a.com, https://b.com");
     expect(typeof validate).toBe("function");

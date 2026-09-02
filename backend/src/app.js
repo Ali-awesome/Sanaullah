@@ -79,7 +79,15 @@ export function createApp({ contactRepository, blogPostRepository, galleryPhotoR
  */
 export function buildCorsOrigin(clientOrigin) {
   if (!clientOrigin) return "*";
-  const allowed = clientOrigin.split(",").map((o) => o.trim()).filter(Boolean);
+  // A browser's real Origin header never has a trailing slash (it's just
+  // scheme://host[:port], no path) — but CLIENT_ORIGIN is easy to copy from
+  // a browser address bar *with* one. Stripped here so a stray trailing
+  // slash in the env var can't silently break every request with a CORS
+  // mismatch (Access-Control-Allow-Origin must match Origin byte-for-byte).
+  const allowed = clientOrigin
+    .split(",")
+    .map((o) => o.trim().replace(/\/+$/, ""))
+    .filter(Boolean);
   if (allowed.length <= 1) return allowed[0] || "*";
   return (origin, callback) => {
     if (!origin || allowed.includes(origin)) return callback(null, true);
