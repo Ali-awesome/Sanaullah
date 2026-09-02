@@ -196,28 +196,41 @@ It asks for the `ADMIN_TOKEN` set in the backend's environment, then lets you:
 
 - add a new "Publications & Learning" post (title, source, date, summary, optional
   image/link) — it appears on the public site immediately;
-- delete a post;
+- edit or delete any post;
 - add a new gallery photo (name + an image path/URL) — it appears in the
   Portfolio section's **"All"** tab immediately (that tab is a dedicated photo
   gallery, separate from the category-filtered project cards under the other
   tabs — see [Changing images](#changing-images) for how to get a new photo
   file onto the site first if you're not just linking an external URL);
-- delete a gallery photo;
+- edit or delete any gallery photo;
+- **drag posts or gallery photos into a new order** (or use the ▲/▼ buttons,
+  a keyboard-operable equivalent to dragging) — the public site always lists
+  both in exactly this admin-controlled order, not by creation date; a newly
+  added post/photo is appended to the end of the order, not spliced to the top;
 - read every message submitted through the public contact form, newest first.
 
 This is backed by real API endpoints, protected by the `x-admin-token` header
 (`backend/src/interfaces/http/middleware/requireAdmin.js`):
 
-| Method | Path              | Auth  | Purpose                        |
-|--------|-------------------|-------|---------------------------------|
-| GET    | `/api/posts`      | none  | list posts (used by the public site) |
-| POST   | `/api/posts`      | admin | create a post                   |
-| DELETE | `/api/posts/:id`  | admin | delete a post                   |
-| GET    | `/api/gallery`      | none  | list gallery photos (used by the "All" tab) |
-| POST   | `/api/gallery`      | admin | add a gallery photo             |
-| DELETE | `/api/gallery/:id`  | admin | delete a gallery photo          |
-| GET    | `/api/contact`    | admin | read the contact inbox          |
-| POST   | `/api/contact`    | none  | submit the public contact form  |
+| Method | Path                  | Auth  | Purpose                        |
+|--------|-----------------------|-------|---------------------------------|
+| GET    | `/api/posts`          | none  | list posts (used by the public site) |
+| POST   | `/api/posts`          | admin | create a post                   |
+| PUT    | `/api/posts/:id`      | admin | edit a post                     |
+| PUT    | `/api/posts/reorder`  | admin | persist a new drag-and-drop order |
+| DELETE | `/api/posts/:id`      | admin | delete a post                   |
+| GET    | `/api/gallery`        | none  | list gallery photos (used by the "All" tab) |
+| POST   | `/api/gallery`        | admin | add a gallery photo             |
+| PUT    | `/api/gallery/:id`    | admin | edit a gallery photo            |
+| PUT    | `/api/gallery/reorder`| admin | persist a new drag-and-drop order |
+| DELETE | `/api/gallery/:id`    | admin | delete a gallery photo          |
+| GET    | `/api/contact`        | admin | read the contact inbox          |
+| POST   | `/api/contact`        | none  | submit the public contact form  |
+
+Existing MongoDB deployments from before this ordering feature existed
+self-heal automatically: `ensureSeeded()` runs a one-time backfill on boot
+that assigns every pre-existing post/photo an order matching its original
+creation order, so upgrading never silently reshuffles a live site.
 
 If `ADMIN_TOKEN` isn't set, the admin routes respond `503` rather than being
 silently open. Messages persist in MongoDB when configured; with the in-memory
@@ -513,13 +526,20 @@ different root directories).
 **2. Backend project:**
 1. https://vercel.com → **Add New** → **Project** → import your GitHub repo.
 2. **Root Directory**: click Edit, select `backend`.
-3. Framework Preset: Vercel should detect *Other* — that's fine, `backend/vercel.json`
-   (already in this repo) tells it to run `api/index.js` as a serverless function
-   for every route.
+3. Framework Preset: Vercel may detect *Other* or *Express* (it added native
+   Express detection at some point) — either is fine either way, since
+   `backend/vercel.json` (already in this repo) explicitly declares a `builds`/
+   `routes` config that runs `api/index.js` as a serverless function for every
+   route, and that takes precedence over the Framework Preset regardless of
+   which one is shown.
 4. **Environment Variables**: add `MONGODB_URI`, `ADMIN_TOKEN`, and (after step 3
    below) `CLIENT_ORIGIN` set to your frontend's URL.
 5. **Deploy**. Note the resulting URL, e.g. `https://your-backend.vercel.app`.
 6. Confirm it works: `curl https://your-backend.vercel.app/health` → `{"status":"ok"}`.
+   Note that hitting the bare root URL (`/`) will 404 with "Cannot GET /" —
+   that's Express's own default response, expected since the app only defines
+   routes under `/health` and `/api/*`, not `/` itself; it doesn't mean the
+   deployment is broken.
 
 **3. Frontend project:**
 1. **Add New** → **Project** → import the *same* repo again as a second project.

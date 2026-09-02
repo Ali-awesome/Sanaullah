@@ -63,6 +63,15 @@ export async function updatePost(id, payload, token) {
   return asJson(res, [200]);
 }
 
+export async function reorderPosts(ids, token) {
+  const res = await fetch(`${BASE}/posts/reorder`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", "x-admin-token": token },
+    body: JSON.stringify({ ids }),
+  });
+  return asJson(res, [200]);
+}
+
 export async function deletePost(id, token) {
   const res = await fetch(`${BASE}/posts/${id}`, {
     method: "DELETE",
@@ -85,6 +94,15 @@ export async function updateGalleryPhoto(id, payload, token) {
     method: "PUT",
     headers: { "Content-Type": "application/json", "x-admin-token": token },
     body: JSON.stringify(payload),
+  });
+  return asJson(res, [200]);
+}
+
+export async function reorderGalleryPhotos(ids, token) {
+  const res = await fetch(`${BASE}/gallery/reorder`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", "x-admin-token": token },
+    body: JSON.stringify({ ids }),
   });
   return asJson(res, [200]);
 }

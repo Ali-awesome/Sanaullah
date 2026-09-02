@@ -1,10 +1,15 @@
 import { DomainValidationError } from "../../../domain/entities/ContactMessage.js";
 
-export function makeBlogController({ listBlogPosts, createBlogPost, updateBlogPost, deleteBlogPost }) {
+export function makeBlogController({ listBlogPosts, createBlogPost, updateBlogPost, reorderBlogPosts, deleteBlogPost }) {
   return {
     async index(req, res) {
       const posts = await listBlogPosts.execute();
       res.json(posts);
+    },
+    async reorder(req, res) {
+      const ids = Array.isArray(req.body?.ids) ? req.body.ids : [];
+      const posts = await reorderBlogPosts.execute(ids);
+      res.json({ success: true, data: posts });
     },
     async create(req, res) {
       try {

@@ -1,10 +1,21 @@
 import { DomainValidationError } from "../../../domain/entities/ContactMessage.js";
 
-export function makeGalleryController({ listGalleryPhotos, createGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto }) {
+export function makeGalleryController({
+  listGalleryPhotos,
+  createGalleryPhoto,
+  updateGalleryPhoto,
+  reorderGalleryPhotos,
+  deleteGalleryPhoto,
+}) {
   return {
     async index(req, res) {
       const photos = await listGalleryPhotos.execute();
       res.json(photos);
+    },
+    async reorder(req, res) {
+      const ids = Array.isArray(req.body?.ids) ? req.body.ids : [];
+      const photos = await reorderGalleryPhotos.execute(ids);
+      res.json({ success: true, data: photos });
     },
     async create(req, res) {
       try {

@@ -20,4 +20,12 @@ export class IBlogPostRepository {
   async delete(_id) {
     throw new Error("Not implemented");
   }
+  /**
+   * Persists a new manual display order: `_orderedIds` is every post's id,
+   * front-to-back, in the order they should now be listed.
+   * @returns the full list, re-sorted to match.
+   */
+  async reorder(_orderedIds) {
+    throw new Error("Not implemented");
+  }
 }

@@ -12,18 +12,20 @@ let seq = 1;
 export class InMemoryGalleryPhotoRepository extends IGalleryPhotoRepository {
   constructor() {
     super();
-    this.photos = gallerySeed.map((p) => ({ id: String(seq++), ...new GalleryPhoto(p) }));
+    // `order` starts out matching gallerySeed's own authored order (its
+    // array index) — admin drag-reordering is the only thing that ever
+    // changes it after that.
+    this.photos = gallerySeed.map((p, i) => ({ id: String(seq++), ...new GalleryPhoto(p), order: i }));
   }
 
   async list() {
-    // Sort by the numeric id (an insertion sequence), not createdAt alone —
-    // two photos created within the same millisecond would otherwise tie
-    // and silently fall back to array order, breaking "newest first".
-    return [...this.photos].sort((a, b) => Number(b.id) - Number(a.id));
+    return [...this.photos].sort((a, b) => a.order - b.order);
   }
 
   async create(photo) {
-    const record = { id: String(seq++), ...photo };
+    // New photos are appended to the end of the manual order, not spliced
+    // to the front — the admin dragged everything else into place on purpose.
+    const record = { id: String(seq++), ...photo, order: this.photos.length };
     this.photos.push(record);
     return record;
   }
@@ -31,9 +33,9 @@ export class InMemoryGalleryPhotoRepository extends IGalleryPhotoRepository {
   async update(id, photo) {
     const index = this.photos.findIndex((p) => p.id === id);
     if (index === -1) return null;
-    // Keep the original id and createdAt — an edit shouldn't change the
-    // photo's identity or bump it to the top of the "newest first" list.
-    const record = { ...photo, id, createdAt: this.photos[index].createdAt };
+    // Keep the original id, createdAt, and manual order — editing a photo's
+    // content shouldn't change its identity or reshuffle its position.
+    const record = { ...photo, id, createdAt: this.photos[index].createdAt, order: this.photos[index].order };
     this.photos[index] = record;
     return record;
   }
@@ -42,5 +44,13 @@ export class InMemoryGalleryPhotoRepository extends IGalleryPhotoRepository {
     const before = this.photos.length;
     this.photos = this.photos.filter((p) => p.id !== id);
     return this.photos.length < before;
+  }
+
+  async reorder(orderedIds) {
+    orderedIds.forEach((id, index) => {
+      const photo = this.photos.find((p) => p.id === id);
+      if (photo) photo.order = index;
+    });
+    return this.list();
   }
 }

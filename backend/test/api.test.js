@@ -102,6 +102,29 @@ describe("POST /api/posts (admin only)", () => {
   });
 });
 
+describe("PUT /api/posts/reorder (admin only)", () => {
+  it("rejects requests without the admin token", async () => {
+    const res = await request(buildApp()).put("/api/posts/reorder").send({ ids: [] });
+    expect(res.status).toBe(401);
+  });
+
+  it("persists the new order and reflects it in subsequent GETs", async () => {
+    const app = buildApp();
+    const before = await request(app).get("/api/posts");
+    const reversedIds = [...before.body].reverse().map((p) => p.id);
+
+    const res = await request(app)
+      .put("/api/posts/reorder")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ ids: reversedIds });
+    expect(res.status).toBe(200);
+    expect(res.body.data.map((p) => p.id)).toEqual(reversedIds);
+
+    const after = await request(app).get("/api/posts");
+    expect(after.body.map((p) => p.id)).toEqual(reversedIds);
+  });
+});
+
 describe("PUT /api/posts/:id (admin only)", () => {
   it("rejects requests without the admin token", async () => {
     const app = buildApp();
@@ -207,6 +230,29 @@ describe("POST /api/gallery (admin only)", () => {
   it("rejects an invalid photo even with a valid admin token", async () => {
     const res = await request(buildApp()).post("/api/gallery").set("x-admin-token", ADMIN_TOKEN).send({ name: "" });
     expect(res.status).toBe(400);
+  });
+});
+
+describe("PUT /api/gallery/reorder (admin only)", () => {
+  it("rejects requests without the admin token", async () => {
+    const res = await request(buildApp()).put("/api/gallery/reorder").send({ ids: [] });
+    expect(res.status).toBe(401);
+  });
+
+  it("persists the new order and reflects it in subsequent GETs", async () => {
+    const app = buildApp();
+    const before = await request(app).get("/api/gallery");
+    const reversedIds = [...before.body].reverse().map((p) => p.id);
+
+    const res = await request(app)
+      .put("/api/gallery/reorder")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ ids: reversedIds });
+    expect(res.status).toBe(200);
+    expect(res.body.data.map((p) => p.id)).toEqual(reversedIds);
+
+    const after = await request(app).get("/api/gallery");
+    expect(after.body.map((p) => p.id)).toEqual(reversedIds);
   });
 });
 

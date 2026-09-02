@@ -4,10 +4,12 @@ import { ListContactMessages } from "../src/application/use-cases/ListContactMes
 import { CreateBlogPost } from "../src/application/use-cases/CreateBlogPost.js";
 import { ListBlogPosts } from "../src/application/use-cases/ListBlogPosts.js";
 import { UpdateBlogPost } from "../src/application/use-cases/UpdateBlogPost.js";
+import { ReorderBlogPosts } from "../src/application/use-cases/ReorderBlogPosts.js";
 import { DeleteBlogPost } from "../src/application/use-cases/DeleteBlogPost.js";
 import { CreateGalleryPhoto } from "../src/application/use-cases/CreateGalleryPhoto.js";
 import { ListGalleryPhotos } from "../src/application/use-cases/ListGalleryPhotos.js";
 import { UpdateGalleryPhoto } from "../src/application/use-cases/UpdateGalleryPhoto.js";
+import { ReorderGalleryPhotos } from "../src/application/use-cases/ReorderGalleryPhotos.js";
 import { DeleteGalleryPhoto } from "../src/application/use-cases/DeleteGalleryPhoto.js";
 import { InMemoryContactRepository } from "../src/infrastructure/repositories/InMemoryContactRepository.js";
 import { InMemoryBlogPostRepository } from "../src/infrastructure/repositories/InMemoryBlogPostRepository.js";
@@ -50,7 +52,7 @@ describe("Blog post use cases", () => {
     expect(posts.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("creates a new post and it appears in the list", async () => {
+  it("creates a new post and it appears at the end of the manually-ordered list", async () => {
     const create = new CreateBlogPost(repo);
     const list = new ListBlogPosts(repo);
     const before = (await list.execute()).length;
@@ -59,7 +61,7 @@ describe("Blog post use cases", () => {
 
     const after = await list.execute();
     expect(after.length).toBe(before + 1);
-    expect(after[0].title).toBe("New Post");
+    expect(after[after.length - 1].title).toBe("New Post");
   });
 
   it("rejects an invalid post", async () => {
@@ -107,6 +109,21 @@ describe("Blog post use cases", () => {
     const result = await update.execute("does-not-exist", { title: "T", source: "S", summary: "Summary." });
     expect(result).toBeNull();
   });
+
+  it("reorders posts to match the given id order", async () => {
+    const list = new ListBlogPosts(repo);
+    const reorder = new ReorderBlogPosts(repo);
+    const before = await list.execute();
+    const reversedIds = [...before].reverse().map((p) => p.id);
+
+    const after = await reorder.execute(reversedIds);
+    expect(after.map((p) => p.id)).toEqual(reversedIds);
+
+    // The new order sticks for subsequent listings, not just the response
+    // from reorder() itself.
+    const relisted = await list.execute();
+    expect(relisted.map((p) => p.id)).toEqual(reversedIds);
+  });
 });
 
 describe("Gallery photo use cases", () => {
@@ -121,7 +138,7 @@ describe("Gallery photo use cases", () => {
     expect(photos.length).toBeGreaterThanOrEqual(4);
   });
 
-  it("creates a new photo and it appears in the list", async () => {
+  it("creates a new photo and it appears at the end of the manually-ordered list", async () => {
     const create = new CreateGalleryPhoto(repo);
     const list = new ListGalleryPhotos(repo);
     const before = (await list.execute()).length;
@@ -130,7 +147,7 @@ describe("Gallery photo use cases", () => {
 
     const after = await list.execute();
     expect(after.length).toBe(before + 1);
-    expect(after[0].name).toBe("New Photo");
+    expect(after[after.length - 1].name).toBe("New Photo");
   });
 
   it("rejects an invalid photo", async () => {
@@ -172,5 +189,20 @@ describe("Gallery photo use cases", () => {
     const update = new UpdateGalleryPhoto(repo);
     const result = await update.execute("does-not-exist", { name: "N", image: "/img/portfolio/3.jpg" });
     expect(result).toBeNull();
+  });
+
+  it("reorders photos to match the given id order", async () => {
+    const list = new ListGalleryPhotos(repo);
+    const reorder = new ReorderGalleryPhotos(repo);
+    const before = await list.execute();
+    const reversedIds = [...before].reverse().map((p) => p.id);
+
+    const after = await reorder.execute(reversedIds);
+    expect(after.map((p) => p.id)).toEqual(reversedIds);
+
+    // The new order sticks for subsequent listings, not just the response
+    // from reorder() itself.
+    const relisted = await list.execute();
+    expect(relisted.map((p) => p.id)).toEqual(reversedIds);
   });
 });

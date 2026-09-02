@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
+import { FaGripVertical, FaChevronUp, FaChevronDown } from "react-icons/fa";
 import {
   fetchContactMessages,
   fetchPosts,
   createPost,
   updatePost,
+  reorderPosts,
   deletePost,
   fetchGallery,
   createGalleryPhoto,
   updateGalleryPhoto,
+  reorderGalleryPhotos,
   deleteGalleryPhoto,
 } from "../../api/client.js";
 
@@ -22,7 +25,21 @@ const buttonClass =
 const secondaryButtonClass =
   "block w-full rounded-md border border-[#ddd] bg-white px-4 py-[10px] font-[inherit] text-black";
 const smallButtonClass = "h-fit rounded-md border border-[#ddd] bg-white px-3 py-[6px]";
+const iconButtonClass = "flex h-7 w-7 items-center justify-center rounded-md border border-[#ddd] bg-white disabled:cursor-not-allowed disabled:opacity-40";
 const dangerButtonClass = "h-fit rounded-md border border-[#c0392b] bg-white px-3 py-[6px] text-[#c0392b]";
+
+// Swaps the item at `index` with its neighbor in `direction` (-1 up, +1
+// down); returns the array unchanged if already at that end. Shared by both
+// the drag handles' drop logic (via array splice, see below) and the
+// keyboard-accessible move buttons — dragging isn't operable without a
+// mouse/touch, so the arrows are the only way to reorder without one.
+function moveItem(list, index, direction) {
+  const target = index + direction;
+  if (target < 0 || target >= list.length) return list;
+  const next = [...list];
+  [next[index], next[target]] = [next[target], next[index]];
+  return next;
+}
 
 export default function AdminPanel() {
   const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY) || "");
@@ -130,6 +147,47 @@ export default function AdminPanel() {
     }
   };
 
+  // Dragging reorders the local list live (as you drag over another row) so
+  // the drop target is obvious; the actual persist call only fires once, on
+  // drop. `dragged` tracks which row's grip is currently being dragged.
+  const [draggedPostId, setDraggedPostId] = useState(null);
+
+  const persistPostOrder = async (ordered) => {
+    try {
+      await reorderPosts(ordered.map((p) => p.id), token);
+    } catch (err) {
+      setError(err.message);
+      load(token); // the write failed — resync with what the server actually has
+    }
+  };
+
+  const handlePostDragOver = (overId) => (e) => {
+    e.preventDefault();
+    if (draggedPostId === null || draggedPostId === overId) return;
+    setPosts((current) => {
+      const from = current.findIndex((p) => p.id === draggedPostId);
+      const to = current.findIndex((p) => p.id === overId);
+      if (from === -1 || to === -1 || from === to) return current;
+      const next = [...current];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
+
+  const handlePostDrop = () => {
+    if (draggedPostId === null) return;
+    setDraggedPostId(null);
+    persistPostOrder(posts);
+  };
+
+  const movePost = (index, direction) => {
+    const next = moveItem(posts, index, direction);
+    if (next === posts) return;
+    setPosts(next);
+    persistPostOrder(next);
+  };
+
   const startEditPhoto = (photo) => {
     setEditingPhotoId(photo.id);
     setPhotoForm({ name: photo.name || "", image: photo.image || "" });
@@ -169,6 +227,44 @@ export default function AdminPanel() {
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const [draggedPhotoId, setDraggedPhotoId] = useState(null);
+
+  const persistPhotoOrder = async (ordered) => {
+    try {
+      await reorderGalleryPhotos(ordered.map((p) => p.id), token);
+    } catch (err) {
+      setError(err.message);
+      load(token); // the write failed — resync with what the server actually has
+    }
+  };
+
+  const handlePhotoDragOver = (overId) => (e) => {
+    e.preventDefault();
+    if (draggedPhotoId === null || draggedPhotoId === overId) return;
+    setGallery((current) => {
+      const from = current.findIndex((p) => p.id === draggedPhotoId);
+      const to = current.findIndex((p) => p.id === overId);
+      if (from === -1 || to === -1 || from === to) return current;
+      const next = [...current];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
+
+  const handlePhotoDrop = () => {
+    if (draggedPhotoId === null) return;
+    setDraggedPhotoId(null);
+    persistPhotoOrder(gallery);
+  };
+
+  const movePhoto = (index, direction) => {
+    const next = moveItem(gallery, index, direction);
+    if (next === gallery) return;
+    setGallery(next);
+    persistPhotoOrder(next);
   };
 
   if (!token) {
@@ -261,16 +357,49 @@ export default function AdminPanel() {
 
         <section className="mt-[30px] border-t border-[#eee] pt-5">
           <h3 className="mb-3 mt-0 text-lg font-semibold">Posts ({posts ? posts.length : "…"})</h3>
-          {posts?.map((p) => (
-            <div key={p.id} className="flex items-start justify-between border-b border-[#f0f0f0] py-3">
-              <div>
-                <strong>{p.title}</strong>
-                <div className="text-sm text-[#767676]">
-                  {p.source}
-                  {p.date ? ` — ${p.date}` : ""}
+          <p className="mb-3 text-sm text-[#767676]">
+            Drag the <FaGripVertical className="inline" aria-hidden="true" /> handle to reorder — this is the order
+            they'll appear in on the site.
+          </p>
+          {posts?.map((p, i) => (
+            <div
+              key={p.id}
+              draggable
+              onDragStart={() => setDraggedPostId(p.id)}
+              onDragOver={handlePostDragOver(p.id)}
+              onDrop={handlePostDrop}
+              onDragEnd={() => setDraggedPostId(null)}
+              className={`flex items-start justify-between gap-3 border-b border-[#f0f0f0] py-3 ${
+                draggedPostId === p.id ? "opacity-40" : ""
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <FaGripVertical className="mt-1 shrink-0 cursor-grab text-[#bbb] active:cursor-grabbing" aria-hidden="true" />
+                <div>
+                  <strong>{p.title}</strong>
+                  <div className="text-sm text-[#767676]">
+                    {p.source}
+                    {p.date ? ` — ${p.date}` : ""}
+                  </div>
                 </div>
               </div>
-              <div className="flex gap-[8px]">
+              <div className="flex shrink-0 gap-[8px]">
+                <button
+                  className={iconButtonClass}
+                  onClick={() => movePost(i, -1)}
+                  disabled={i === 0}
+                  aria-label={`Move "${p.title}" up`}
+                >
+                  <FaChevronUp />
+                </button>
+                <button
+                  className={iconButtonClass}
+                  onClick={() => movePost(i, 1)}
+                  disabled={i === posts.length - 1}
+                  aria-label={`Move "${p.title}" down`}
+                >
+                  <FaChevronDown />
+                </button>
                 <button className={smallButtonClass} onClick={() => startEditPost(p)}>
                   Edit
                 </button>
@@ -318,13 +447,44 @@ export default function AdminPanel() {
 
         <section className="mt-[30px] border-t border-[#eee] pt-5">
           <h3 className="mb-3 mt-0 text-lg font-semibold">Gallery Photos ({gallery ? gallery.length : "…"})</h3>
-          {gallery?.map((g) => (
-            <div key={g.id} className="flex items-start justify-between border-b border-[#f0f0f0] py-3">
+          <p className="mb-3 text-sm text-[#767676]">
+            Drag the <FaGripVertical className="inline" aria-hidden="true" /> handle to reorder — this is the order
+            they'll appear in under Portfolio's "All" tab.
+          </p>
+          {gallery?.map((g, i) => (
+            <div
+              key={g.id}
+              draggable
+              onDragStart={() => setDraggedPhotoId(g.id)}
+              onDragOver={handlePhotoDragOver(g.id)}
+              onDrop={handlePhotoDrop}
+              onDragEnd={() => setDraggedPhotoId(null)}
+              className={`flex items-start justify-between gap-3 border-b border-[#f0f0f0] py-3 ${
+                draggedPhotoId === g.id ? "opacity-40" : ""
+              }`}
+            >
               <div className="flex items-center gap-3">
+                <FaGripVertical className="shrink-0 cursor-grab text-[#bbb] active:cursor-grabbing" aria-hidden="true" />
                 <img src={g.image} alt="" className="h-11 w-11 rounded object-cover" />
                 <strong>{g.name}</strong>
               </div>
-              <div className="flex gap-[8px]">
+              <div className="flex shrink-0 gap-[8px]">
+                <button
+                  className={iconButtonClass}
+                  onClick={() => movePhoto(i, -1)}
+                  disabled={i === 0}
+                  aria-label={`Move "${g.name}" up`}
+                >
+                  <FaChevronUp />
+                </button>
+                <button
+                  className={iconButtonClass}
+                  onClick={() => movePhoto(i, 1)}
+                  disabled={i === gallery.length - 1}
+                  aria-label={`Move "${g.name}" down`}
+                >
+                  <FaChevronDown />
+                </button>
                 <button className={smallButtonClass} onClick={() => startEditPhoto(g)}>
                   Edit
                 </button>

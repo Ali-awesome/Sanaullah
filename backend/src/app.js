@@ -7,10 +7,12 @@ import { ListContactMessages } from "./application/use-cases/ListContactMessages
 import { ListBlogPosts } from "./application/use-cases/ListBlogPosts.js";
 import { CreateBlogPost } from "./application/use-cases/CreateBlogPost.js";
 import { UpdateBlogPost } from "./application/use-cases/UpdateBlogPost.js";
+import { ReorderBlogPosts } from "./application/use-cases/ReorderBlogPosts.js";
 import { DeleteBlogPost } from "./application/use-cases/DeleteBlogPost.js";
 import { ListGalleryPhotos } from "./application/use-cases/ListGalleryPhotos.js";
 import { CreateGalleryPhoto } from "./application/use-cases/CreateGalleryPhoto.js";
 import { UpdateGalleryPhoto } from "./application/use-cases/UpdateGalleryPhoto.js";
+import { ReorderGalleryPhotos } from "./application/use-cases/ReorderGalleryPhotos.js";
 import { DeleteGalleryPhoto } from "./application/use-cases/DeleteGalleryPhoto.js";
 
 import { StaticProfileRepository } from "./infrastructure/repositories/StaticProfileRepository.js";
@@ -38,19 +40,28 @@ export function createApp({ contactRepository, blogPostRepository, galleryPhotoR
   const listBlogPosts = new ListBlogPosts(blogPostRepository);
   const createBlogPost = new CreateBlogPost(blogPostRepository);
   const updateBlogPost = new UpdateBlogPost(blogPostRepository);
+  const reorderBlogPosts = new ReorderBlogPosts(blogPostRepository);
   const deleteBlogPost = new DeleteBlogPost(blogPostRepository);
   const listGalleryPhotos = new ListGalleryPhotos(galleryPhotoRepository);
   const createGalleryPhoto = new CreateGalleryPhoto(galleryPhotoRepository);
   const updateGalleryPhoto = new UpdateGalleryPhoto(galleryPhotoRepository);
+  const reorderGalleryPhotos = new ReorderGalleryPhotos(galleryPhotoRepository);
   const deleteGalleryPhoto = new DeleteGalleryPhoto(galleryPhotoRepository);
 
   const profileController = makeProfileController(getProfile);
   const contactController = makeContactController({ submitContactMessage, listContactMessages });
-  const blogController = makeBlogController({ listBlogPosts, createBlogPost, updateBlogPost, deleteBlogPost });
+  const blogController = makeBlogController({
+    listBlogPosts,
+    createBlogPost,
+    updateBlogPost,
+    reorderBlogPosts,
+    deleteBlogPost,
+  });
   const galleryController = makeGalleryController({
     listGalleryPhotos,
     createGalleryPhoto,
     updateGalleryPhoto,
+    reorderGalleryPhotos,
     deleteGalleryPhoto,
   });
 
