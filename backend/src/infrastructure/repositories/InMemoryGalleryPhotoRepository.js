@@ -28,6 +28,16 @@ export class InMemoryGalleryPhotoRepository extends IGalleryPhotoRepository {
     return record;
   }
 
+  async update(id, photo) {
+    const index = this.photos.findIndex((p) => p.id === id);
+    if (index === -1) return null;
+    // Keep the original id and createdAt — an edit shouldn't change the
+    // photo's identity or bump it to the top of the "newest first" list.
+    const record = { ...photo, id, createdAt: this.photos[index].createdAt };
+    this.photos[index] = record;
+    return record;
+  }
+
   async delete(id) {
     const before = this.photos.length;
     this.photos = this.photos.filter((p) => p.id !== id);

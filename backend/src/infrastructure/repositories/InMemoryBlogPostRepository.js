@@ -28,6 +28,16 @@ export class InMemoryBlogPostRepository extends IBlogPostRepository {
     return record;
   }
 
+  async update(id, post) {
+    const index = this.posts.findIndex((p) => p.id === id);
+    if (index === -1) return null;
+    // Keep the original id and createdAt — an edit shouldn't change the
+    // post's identity or bump it to the top of the "newest first" list.
+    const record = { ...post, id, createdAt: this.posts[index].createdAt };
+    this.posts[index] = record;
+    return record;
+  }
+
   async delete(id) {
     const before = this.posts.length;
     this.posts = this.posts.filter((p) => p.id !== id);

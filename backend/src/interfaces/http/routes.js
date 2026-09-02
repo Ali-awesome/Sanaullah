@@ -11,10 +11,12 @@ export function buildRoutes({ profileController, contactController, blogControll
 
   router.get("/posts", blogController.index);
   router.post("/posts", requireAdmin, blogController.create);
+  router.put("/posts/:id", requireAdmin, blogController.update);
   router.delete("/posts/:id", requireAdmin, blogController.remove);
 
   router.get("/gallery", galleryController.index);
   router.post("/gallery", requireAdmin, galleryController.create);
+  router.put("/gallery/:id", requireAdmin, galleryController.update);
   router.delete("/gallery/:id", requireAdmin, galleryController.remove);
 
   return router;

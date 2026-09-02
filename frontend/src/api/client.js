@@ -54,6 +54,15 @@ export async function createPost(payload, token) {
   return asJson(res, [201]);
 }
 
+export async function updatePost(id, payload, token) {
+  const res = await fetch(`${BASE}/posts/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", "x-admin-token": token },
+    body: JSON.stringify(payload),
+  });
+  return asJson(res, [200]);
+}
+
 export async function deletePost(id, token) {
   const res = await fetch(`${BASE}/posts/${id}`, {
     method: "DELETE",
@@ -69,6 +78,15 @@ export async function createGalleryPhoto(payload, token) {
     body: JSON.stringify(payload),
   });
   return asJson(res, [201]);
+}
+
+export async function updateGalleryPhoto(id, payload, token) {
+  const res = await fetch(`${BASE}/gallery/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", "x-admin-token": token },
+    body: JSON.stringify(payload),
+  });
+  return asJson(res, [200]);
 }
 
 export async function deleteGalleryPhoto(id, token) {

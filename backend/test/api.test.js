@@ -102,6 +102,62 @@ describe("POST /api/posts (admin only)", () => {
   });
 });
 
+describe("PUT /api/posts/:id (admin only)", () => {
+  it("rejects requests without the admin token", async () => {
+    const app = buildApp();
+    const created = await request(app)
+      .post("/api/posts")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ title: "Original", source: "S", date: "2026", summary: "Original summary." });
+
+    const res = await request(app)
+      .put(`/api/posts/${created.body.data.id}`)
+      .send({ title: "Edited", source: "S", date: "2026", summary: "Edited summary." });
+    expect(res.status).toBe(401);
+  });
+
+  it("updates a post when the admin token is supplied", async () => {
+    const app = buildApp();
+    const created = await request(app)
+      .post("/api/posts")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ title: "Original", source: "S", date: "2026", summary: "Original summary." });
+
+    const res = await request(app)
+      .put(`/api/posts/${created.body.data.id}`)
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ title: "Edited", source: "S2", date: "2027", summary: "Edited summary." });
+    expect(res.status).toBe(200);
+    expect(res.body.data.title).toBe("Edited");
+
+    const list = await request(app).get("/api/posts");
+    expect(list.body.some((p) => p.title === "Edited")).toBe(true);
+    expect(list.body.some((p) => p.title === "Original")).toBe(false);
+  });
+
+  it("rejects an invalid update even with a valid admin token", async () => {
+    const app = buildApp();
+    const created = await request(app)
+      .post("/api/posts")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ title: "Original", source: "S", date: "2026", summary: "Original summary." });
+
+    const res = await request(app)
+      .put(`/api/posts/${created.body.data.id}`)
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ title: "" });
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 404 for a non-existent post", async () => {
+    const res = await request(buildApp())
+      .put("/api/posts/does-not-exist")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ title: "T", source: "S", summary: "Summary." });
+    expect(res.status).toBe(404);
+  });
+});
+
 describe("DELETE /api/posts/:id (admin only)", () => {
   it("deletes an existing post", async () => {
     const app = buildApp();
@@ -151,6 +207,62 @@ describe("POST /api/gallery (admin only)", () => {
   it("rejects an invalid photo even with a valid admin token", async () => {
     const res = await request(buildApp()).post("/api/gallery").set("x-admin-token", ADMIN_TOKEN).send({ name: "" });
     expect(res.status).toBe(400);
+  });
+});
+
+describe("PUT /api/gallery/:id (admin only)", () => {
+  it("rejects requests without the admin token", async () => {
+    const app = buildApp();
+    const created = await request(app)
+      .post("/api/gallery")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ name: "Original", image: "/img/portfolio/3.jpg" });
+
+    const res = await request(app)
+      .put(`/api/gallery/${created.body.data.id}`)
+      .send({ name: "Edited", image: "/img/portfolio/4.jpg" });
+    expect(res.status).toBe(401);
+  });
+
+  it("updates a photo when the admin token is supplied", async () => {
+    const app = buildApp();
+    const created = await request(app)
+      .post("/api/gallery")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ name: "Original", image: "/img/portfolio/3.jpg" });
+
+    const res = await request(app)
+      .put(`/api/gallery/${created.body.data.id}`)
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ name: "Edited", image: "/img/portfolio/4.jpg" });
+    expect(res.status).toBe(200);
+    expect(res.body.data.name).toBe("Edited");
+
+    const list = await request(app).get("/api/gallery");
+    expect(list.body.some((p) => p.name === "Edited")).toBe(true);
+    expect(list.body.some((p) => p.name === "Original")).toBe(false);
+  });
+
+  it("rejects an invalid update even with a valid admin token", async () => {
+    const app = buildApp();
+    const created = await request(app)
+      .post("/api/gallery")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ name: "Original", image: "/img/portfolio/3.jpg" });
+
+    const res = await request(app)
+      .put(`/api/gallery/${created.body.data.id}`)
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ name: "" });
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 404 for a non-existent photo", async () => {
+    const res = await request(buildApp())
+      .put("/api/gallery/does-not-exist")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ name: "N", image: "/img/portfolio/3.jpg" });
+    expect(res.status).toBe(404);
   });
 });
 

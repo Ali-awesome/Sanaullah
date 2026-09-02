@@ -3,9 +3,11 @@ import { SubmitContactMessage } from "../src/application/use-cases/SubmitContact
 import { ListContactMessages } from "../src/application/use-cases/ListContactMessages.js";
 import { CreateBlogPost } from "../src/application/use-cases/CreateBlogPost.js";
 import { ListBlogPosts } from "../src/application/use-cases/ListBlogPosts.js";
+import { UpdateBlogPost } from "../src/application/use-cases/UpdateBlogPost.js";
 import { DeleteBlogPost } from "../src/application/use-cases/DeleteBlogPost.js";
 import { CreateGalleryPhoto } from "../src/application/use-cases/CreateGalleryPhoto.js";
 import { ListGalleryPhotos } from "../src/application/use-cases/ListGalleryPhotos.js";
+import { UpdateGalleryPhoto } from "../src/application/use-cases/UpdateGalleryPhoto.js";
 import { DeleteGalleryPhoto } from "../src/application/use-cases/DeleteGalleryPhoto.js";
 import { InMemoryContactRepository } from "../src/infrastructure/repositories/InMemoryContactRepository.js";
 import { InMemoryBlogPostRepository } from "../src/infrastructure/repositories/InMemoryBlogPostRepository.js";
@@ -74,6 +76,37 @@ describe("Blog post use cases", () => {
     expect(result).toBe(true);
     expect(repo.posts.find((p) => p.id === created.id)).toBeUndefined();
   });
+
+  it("updates a post by id, keeping its id and createdAt", async () => {
+    const create = new CreateBlogPost(repo);
+    const update = new UpdateBlogPost(repo);
+    const created = await create.execute({ title: "Original", source: "S", date: "2026", summary: "Original summary." });
+
+    const updated = await update.execute(created.id, {
+      title: "Edited",
+      source: "S2",
+      date: "2027",
+      summary: "Edited summary.",
+    });
+
+    expect(updated.id).toBe(created.id);
+    expect(updated.title).toBe("Edited");
+    expect(updated.createdAt).toEqual(created.createdAt);
+  });
+
+  it("rejects an update with invalid data", async () => {
+    const create = new CreateBlogPost(repo);
+    const update = new UpdateBlogPost(repo);
+    const created = await create.execute({ title: "Original", source: "S", date: "2026", summary: "Original summary." });
+
+    await expect(update.execute(created.id, { title: "" })).rejects.toThrow(DomainValidationError);
+  });
+
+  it("returns null when updating a non-existent post", async () => {
+    const update = new UpdateBlogPost(repo);
+    const result = await update.execute("does-not-exist", { title: "T", source: "S", summary: "Summary." });
+    expect(result).toBeNull();
+  });
 });
 
 describe("Gallery photo use cases", () => {
@@ -113,5 +146,31 @@ describe("Gallery photo use cases", () => {
     const result = await del.execute(created.id);
     expect(result).toBe(true);
     expect(repo.photos.find((p) => p.id === created.id)).toBeUndefined();
+  });
+
+  it("updates a photo by id, keeping its id and createdAt", async () => {
+    const create = new CreateGalleryPhoto(repo);
+    const update = new UpdateGalleryPhoto(repo);
+    const created = await create.execute({ name: "Original", image: "/img/portfolio/3.jpg" });
+
+    const updated = await update.execute(created.id, { name: "Edited", image: "/img/portfolio/4.jpg" });
+
+    expect(updated.id).toBe(created.id);
+    expect(updated.name).toBe("Edited");
+    expect(updated.createdAt).toEqual(created.createdAt);
+  });
+
+  it("rejects an update with invalid data", async () => {
+    const create = new CreateGalleryPhoto(repo);
+    const update = new UpdateGalleryPhoto(repo);
+    const created = await create.execute({ name: "Original", image: "/img/portfolio/3.jpg" });
+
+    await expect(update.execute(created.id, { name: "" })).rejects.toThrow(DomainValidationError);
+  });
+
+  it("returns null when updating a non-existent photo", async () => {
+    const update = new UpdateGalleryPhoto(repo);
+    const result = await update.execute("does-not-exist", { name: "N", image: "/img/portfolio/3.jpg" });
+    expect(result).toBeNull();
   });
 });

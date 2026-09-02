@@ -6,9 +6,11 @@ import { SubmitContactMessage } from "./application/use-cases/SubmitContactMessa
 import { ListContactMessages } from "./application/use-cases/ListContactMessages.js";
 import { ListBlogPosts } from "./application/use-cases/ListBlogPosts.js";
 import { CreateBlogPost } from "./application/use-cases/CreateBlogPost.js";
+import { UpdateBlogPost } from "./application/use-cases/UpdateBlogPost.js";
 import { DeleteBlogPost } from "./application/use-cases/DeleteBlogPost.js";
 import { ListGalleryPhotos } from "./application/use-cases/ListGalleryPhotos.js";
 import { CreateGalleryPhoto } from "./application/use-cases/CreateGalleryPhoto.js";
+import { UpdateGalleryPhoto } from "./application/use-cases/UpdateGalleryPhoto.js";
 import { DeleteGalleryPhoto } from "./application/use-cases/DeleteGalleryPhoto.js";
 
 import { StaticProfileRepository } from "./infrastructure/repositories/StaticProfileRepository.js";
@@ -35,15 +37,22 @@ export function createApp({ contactRepository, blogPostRepository, galleryPhotoR
   const listContactMessages = new ListContactMessages(contactRepository);
   const listBlogPosts = new ListBlogPosts(blogPostRepository);
   const createBlogPost = new CreateBlogPost(blogPostRepository);
+  const updateBlogPost = new UpdateBlogPost(blogPostRepository);
   const deleteBlogPost = new DeleteBlogPost(blogPostRepository);
   const listGalleryPhotos = new ListGalleryPhotos(galleryPhotoRepository);
   const createGalleryPhoto = new CreateGalleryPhoto(galleryPhotoRepository);
+  const updateGalleryPhoto = new UpdateGalleryPhoto(galleryPhotoRepository);
   const deleteGalleryPhoto = new DeleteGalleryPhoto(galleryPhotoRepository);
 
   const profileController = makeProfileController(getProfile);
   const contactController = makeContactController({ submitContactMessage, listContactMessages });
-  const blogController = makeBlogController({ listBlogPosts, createBlogPost, deleteBlogPost });
-  const galleryController = makeGalleryController({ listGalleryPhotos, createGalleryPhoto, deleteGalleryPhoto });
+  const blogController = makeBlogController({ listBlogPosts, createBlogPost, updateBlogPost, deleteBlogPost });
+  const galleryController = makeGalleryController({
+    listGalleryPhotos,
+    createGalleryPhoto,
+    updateGalleryPhoto,
+    deleteGalleryPhoto,
+  });
 
   app.get("/health", (req, res) => res.json({ status: "ok" }));
   app.use("/api", buildRoutes({ profileController, contactController, blogController, galleryController }));

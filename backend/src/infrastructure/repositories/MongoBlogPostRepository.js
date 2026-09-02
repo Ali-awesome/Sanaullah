@@ -6,7 +6,9 @@ import { BlogPost } from "../../domain/entities/BlogPost.js";
 const blogPostSchema = new mongoose.Schema({
   title: { type: String, required: true },
   source: { type: String, required: true },
-  date: { type: String, required: true },
+  // Optional: some entries (e.g. a course with no fixed completion date)
+  // genuinely have nothing meaningful here — see BlogPost.js.
+  date: { type: String, default: "" },
   summary: { type: String, required: true },
   image: { type: String, default: "/img/news/1.jpg" },
   link: { type: String, default: null },
@@ -43,6 +45,23 @@ export class MongoBlogPostRepository extends IBlogPostRepository {
   async create(post) {
     const doc = await BlogPostModel.create({ ...post });
     return toRecord(doc);
+  }
+
+  async update(id, post) {
+    try {
+      const doc = await BlogPostModel.findByIdAndUpdate(
+        id,
+        { title: post.title, source: post.source, date: post.date, summary: post.summary, image: post.image, link: post.link },
+        { new: true, runValidators: true }
+      );
+      return doc ? toRecord(doc) : null;
+    } catch (err) {
+      // A malformed id (not a valid ObjectId) throws CastError before ever
+      // reaching the database — treat it the same as "not found" rather
+      // than a 500, matching what a real invalid id means to the caller.
+      if (err.name === "CastError") return null;
+      throw err;
+    }
   }
 
   async delete(id) {

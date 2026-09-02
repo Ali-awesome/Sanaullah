@@ -3,20 +3,26 @@ import {
   fetchContactMessages,
   fetchPosts,
   createPost,
+  updatePost,
   deletePost,
   fetchGallery,
   createGalleryPhoto,
+  updateGalleryPhoto,
   deleteGalleryPhoto,
 } from "../../api/client.js";
 
 const TOKEN_KEY = "portfolio_admin_token";
+const BLANK_POST = { title: "", source: "", date: "", summary: "", image: "", link: "" };
+const BLANK_PHOTO = { name: "", image: "" };
 
 const inputClass =
   "mb-3 block w-full rounded-md border border-[#ddd] px-3 py-[10px] font-[inherit] text-[15px] focus:border-black/50 focus:outline-none";
 const buttonClass =
   "block w-full rounded-md border-none bg-black px-4 py-[10px] font-[inherit] text-white disabled:cursor-not-allowed disabled:opacity-60";
-const dangerButtonClass =
-  "h-fit rounded-md border border-[#c0392b] bg-white px-3 py-[6px] text-[#c0392b]";
+const secondaryButtonClass =
+  "block w-full rounded-md border border-[#ddd] bg-white px-4 py-[10px] font-[inherit] text-black";
+const smallButtonClass = "h-fit rounded-md border border-[#ddd] bg-white px-3 py-[6px]";
+const dangerButtonClass = "h-fit rounded-md border border-[#c0392b] bg-white px-3 py-[6px] text-[#c0392b]";
 
 export default function AdminPanel() {
   const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY) || "");
@@ -25,10 +31,15 @@ export default function AdminPanel() {
   const [posts, setPosts] = useState(null);
   const [gallery, setGallery] = useState(null);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ title: "", source: "", date: "", summary: "", image: "", link: "" });
-  const [photoForm, setPhotoForm] = useState({ name: "", image: "" });
+  const [form, setForm] = useState(BLANK_POST);
+  const [photoForm, setPhotoForm] = useState(BLANK_PHOTO);
   const [saving, setSaving] = useState(false);
   const [savingPhoto, setSavingPhoto] = useState(false);
+  // null = the form above is creating a new post/photo; otherwise it's the
+  // id of the one currently being edited, and the same form/submit handler
+  // updates it in place instead of creating a new one.
+  const [editingPostId, setEditingPostId] = useState(null);
+  const [editingPhotoId, setEditingPhotoId] = useState(null);
 
   // The contact-inbox fetch is the only one gated on the admin token — a
   // failure there means the token itself is bad (or was revoked), so that's
@@ -71,13 +82,36 @@ export default function AdminPanel() {
     setPosts(null);
   };
 
-  const handleCreate = async (e) => {
+  const startEditPost = (post) => {
+    setEditingPostId(post.id);
+    setForm({
+      title: post.title || "",
+      source: post.source || "",
+      date: post.date || "",
+      summary: post.summary || "",
+      image: post.image || "",
+      link: post.link || "",
+    });
+    setError("");
+  };
+
+  const cancelEditPost = () => {
+    setEditingPostId(null);
+    setForm(BLANK_POST);
+  };
+
+  const handleSubmitPost = async (e) => {
     e.preventDefault();
     setSaving(true);
     setError("");
     try {
-      await createPost(form, token);
-      setForm({ title: "", source: "", date: "", summary: "", image: "", link: "" });
+      if (editingPostId) {
+        await updatePost(editingPostId, form, token);
+      } else {
+        await createPost(form, token);
+      }
+      setForm(BLANK_POST);
+      setEditingPostId(null);
       load(token);
     } catch (err) {
       setError(err.message);
@@ -89,19 +123,36 @@ export default function AdminPanel() {
   const handleDelete = async (id) => {
     try {
       await deletePost(id, token);
+      if (editingPostId === id) cancelEditPost();
       load(token);
     } catch (err) {
       setError(err.message);
     }
   };
 
-  const handleCreatePhoto = async (e) => {
+  const startEditPhoto = (photo) => {
+    setEditingPhotoId(photo.id);
+    setPhotoForm({ name: photo.name || "", image: photo.image || "" });
+    setError("");
+  };
+
+  const cancelEditPhoto = () => {
+    setEditingPhotoId(null);
+    setPhotoForm(BLANK_PHOTO);
+  };
+
+  const handleSubmitPhoto = async (e) => {
     e.preventDefault();
     setSavingPhoto(true);
     setError("");
     try {
-      await createGalleryPhoto(photoForm, token);
-      setPhotoForm({ name: "", image: "" });
+      if (editingPhotoId) {
+        await updateGalleryPhoto(editingPhotoId, photoForm, token);
+      } else {
+        await createGalleryPhoto(photoForm, token);
+      }
+      setPhotoForm(BLANK_PHOTO);
+      setEditingPhotoId(null);
       load(token);
     } catch (err) {
       setError(err.message);
@@ -113,6 +164,7 @@ export default function AdminPanel() {
   const handleDeletePhoto = async (id) => {
     try {
       await deleteGalleryPhoto(id, token);
+      if (editingPhotoId === id) cancelEditPhoto();
       load(token);
     } catch (err) {
       setError(err.message);
@@ -153,8 +205,8 @@ export default function AdminPanel() {
         {error && <p className="text-sm text-[#c0392b]">{error}</p>}
 
         <section className="mt-[30px] border-t border-[#eee] pt-5">
-          <h3 className="mb-3 mt-0 text-lg font-semibold">Add a Post</h3>
-          <form onSubmit={handleCreate} className="flex flex-col gap-[10px]">
+          <h3 className="mb-3 mt-0 text-lg font-semibold">{editingPostId ? "Edit Post" : "Add a Post"}</h3>
+          <form onSubmit={handleSubmitPost} className="flex flex-col gap-[10px]">
             <input
               className={inputClass}
               placeholder="Title"
@@ -194,9 +246,16 @@ export default function AdminPanel() {
               onChange={(e) => setForm({ ...form, summary: e.target.value })}
               required
             />
-            <button className={buttonClass} type="submit" disabled={saving}>
-              {saving ? "Saving…" : "Add Post"}
-            </button>
+            <div className="flex gap-[10px]">
+              <button className={buttonClass} type="submit" disabled={saving}>
+                {saving ? "Saving…" : editingPostId ? "Save Changes" : "Add Post"}
+              </button>
+              {editingPostId && (
+                <button type="button" className={secondaryButtonClass} onClick={cancelEditPost}>
+                  Cancel
+                </button>
+              )}
+            </div>
           </form>
         </section>
 
@@ -211,20 +270,25 @@ export default function AdminPanel() {
                   {p.date ? ` — ${p.date}` : ""}
                 </div>
               </div>
-              <button className={dangerButtonClass} onClick={() => handleDelete(p.id)}>
-                Delete
-              </button>
+              <div className="flex gap-[8px]">
+                <button className={smallButtonClass} onClick={() => startEditPost(p)}>
+                  Edit
+                </button>
+                <button className={dangerButtonClass} onClick={() => handleDelete(p.id)}>
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </section>
 
         <section className="mt-[30px] border-t border-[#eee] pt-5">
-          <h3 className="mb-3 mt-0 text-lg font-semibold">Add a Gallery Photo</h3>
+          <h3 className="mb-3 mt-0 text-lg font-semibold">{editingPhotoId ? "Edit Gallery Photo" : "Add a Gallery Photo"}</h3>
           <p className="mb-3 text-sm text-[#767676]">
             Shows in the Portfolio section's "All" tab. Paste a path already under frontend/public/img/ (e.g.
             /img/portfolio/7.jpg) or any image URL — see the README for how to add new image files.
           </p>
-          <form onSubmit={handleCreatePhoto} className="flex flex-col gap-[10px]">
+          <form onSubmit={handleSubmitPhoto} className="flex flex-col gap-[10px]">
             <input
               className={inputClass}
               placeholder="Name"
@@ -239,9 +303,16 @@ export default function AdminPanel() {
               onChange={(e) => setPhotoForm({ ...photoForm, image: e.target.value })}
               required
             />
-            <button className={buttonClass} type="submit" disabled={savingPhoto}>
-              {savingPhoto ? "Saving…" : "Add Photo"}
-            </button>
+            <div className="flex gap-[10px]">
+              <button className={buttonClass} type="submit" disabled={savingPhoto}>
+                {savingPhoto ? "Saving…" : editingPhotoId ? "Save Changes" : "Add Photo"}
+              </button>
+              {editingPhotoId && (
+                <button type="button" className={secondaryButtonClass} onClick={cancelEditPhoto}>
+                  Cancel
+                </button>
+              )}
+            </div>
           </form>
         </section>
 
@@ -253,9 +324,14 @@ export default function AdminPanel() {
                 <img src={g.image} alt="" className="h-11 w-11 rounded object-cover" />
                 <strong>{g.name}</strong>
               </div>
-              <button className={dangerButtonClass} onClick={() => handleDeletePhoto(g.id)}>
-                Delete
-              </button>
+              <div className="flex gap-[8px]">
+                <button className={smallButtonClass} onClick={() => startEditPhoto(g)}>
+                  Edit
+                </button>
+                <button className={dangerButtonClass} onClick={() => handleDeletePhoto(g.id)}>
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </section>

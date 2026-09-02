@@ -41,6 +41,23 @@ export class MongoGalleryPhotoRepository extends IGalleryPhotoRepository {
     return toRecord(doc);
   }
 
+  async update(id, photo) {
+    try {
+      const doc = await GalleryPhotoModel.findByIdAndUpdate(
+        id,
+        { name: photo.name, image: photo.image },
+        { new: true, runValidators: true }
+      );
+      return doc ? toRecord(doc) : null;
+    } catch (err) {
+      // A malformed id (not a valid ObjectId) throws CastError before ever
+      // reaching the database — treat it the same as "not found" rather
+      // than a 500, matching what a real invalid id means to the caller.
+      if (err.name === "CastError") return null;
+      throw err;
+    }
+  }
+
   async delete(id) {
     const res = await GalleryPhotoModel.deleteOne({ _id: id });
     return res.deletedCount > 0;
