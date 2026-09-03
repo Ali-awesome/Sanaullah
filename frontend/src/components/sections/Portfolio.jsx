@@ -143,8 +143,7 @@ export default function Portfolio({ projects = [], gallery = [] }) {
                     <li key={photo.id} className="mb-10 w-1/3 pl-10 max-sm:w-full max-sm:pl-0">
                       <div className="inner group relative float-left clear-both w-full overflow-hidden">
                         <div
-                          className="relative"
-                          data-title={photo.name}
+                          className="relative" data-title={photo.name}
                           onMouseEnter={() => setHovered({ title: photo.name })}
                           onMouseMove={handleMove}
                           onMouseLeave={() => setHovered(null)}
@@ -156,6 +155,12 @@ export default function Portfolio({ projects = [], gallery = [] }) {
                               setSelectedPhoto(photo);
                             }}
                           >
+                            {/* Matches the original theme exactly: a tiny 1x1
+                                placeholder image (min-width:100%, height
+                                auto) establishes a perfect square cell —
+                                width-relative, so it's square at every
+                                breakpoint — and the real photo fills it via
+                                background-size:cover. */}
                             <img src="/img/thumbs/1-1.jpg" alt="" className="min-w-full opacity-0" />
                             <div
                               className="abs_image absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-300 ease-in-out group-hover:scale-110"
@@ -186,7 +191,7 @@ export default function Portfolio({ projects = [], gallery = [] }) {
                           >
                             <img src="/img/thumbs/1-1.jpg" alt="" className="min-w-full opacity-0" />
                             <div
-                              className="abs_image absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-300 ease-in-out group-hover:scale-110"
+                              className="abs-image absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-300 ease-in-out group-hover:scale-110"
                               style={{ backgroundImage: `url(${item.image})` }}
                             ></div>
                           </a>
@@ -251,7 +256,12 @@ export default function Portfolio({ projects = [], gallery = [] }) {
               {displayedProject && (
                 <div className="description_wrap">
                   <div className="popup_details float-left clear-both w-full">
-                    <div className="top_image relative mb-[37px] h-[340px] overflow-hidden max-lg:h-[260px] max-sm:h-[180px]">
+                    {/* Matches the original theme exactly: a tiny 4x2
+                        placeholder image establishes a fixed 2:1 box —
+                        width-relative, so the ratio holds at every
+                        breakpoint — and the real photo fills it via
+                        background-size:cover. */}
+                    <div className="top_image relative mb-[37px] overflow-hidden">
                       <img src="/img/thumbs/4-2.jpg" alt="" className="relative min-w-full opacity-0" />
                       <div
                         className="main absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -326,7 +336,7 @@ export default function Portfolio({ projects = [], gallery = [] }) {
                               className="float-left mb-[30px] w-1/2 pl-[30px] [&:nth-child(3n+1)]:w-full max-lg:w-full max-lg:pl-0"
                             >
                               <div className="list_inner float-left clear-both w-full">
-                                <div className="my_image relative">
+                                <div className="my_image relative overflow-hidden">
                                   <img src="/img/thumbs/4-2.jpg" alt="" className="min-w-full opacity-0" />
                                   <div
                                     className="main absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -371,7 +381,7 @@ export default function Portfolio({ projects = [], gallery = [] }) {
               {displayedPhoto && (
                 <div className="description_wrap">
                   <div className="popup_details float-left clear-both w-full">
-                    <div className="top_image relative mb-[37px] h-[340px] overflow-hidden max-lg:h-[260px] max-sm:h-[180px]">
+                    <div className="top_image relative mb-[37px] overflow-hidden">
                       <img src="/img/thumbs/4-2.jpg" alt="" className="relative min-w-full opacity-0" />
                       <div
                         className="main absolute inset-0 bg-cover bg-center bg-no-repeat"

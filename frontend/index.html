@@ -45,6 +45,19 @@
     />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet" />
 
+    <!-- Sets the very first paint to black, before the app's own JS/CSS
+         bundle has even loaded — LoadingSpinner and Preloader both render
+         on black, but without this the browser's default white background
+         shows through for a frame first (most noticeable on slower mobile
+         connections, where that gap is longer), which reads as a jarring
+         white flash right before the black loading screen. -->
+    <style>
+      html,
+      body {
+        background: #000;
+      }
+    </style>
+
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",

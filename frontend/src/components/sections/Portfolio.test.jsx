@@ -56,9 +56,10 @@ describe("Portfolio", () => {
     await userEvent.click(firstPhoto);
 
     expect(screen.getAllByText("Gallery Photo One").length).toBeGreaterThan(0);
-    // The real photo renders as a CSS background on ".main" (the theme's
-    // invisible-sizing-image + overlay pattern) — the <img> itself is just
-    // the aspect-ratio placeholder, not the photo.
+    // Matches the original theme: the real photo renders as a CSS
+    // background on ".main" (the theme's invisible-sizing-image + overlay
+    // pattern) — the <img> itself is just the fixed-aspect-ratio
+    // placeholder, not the photo.
     expect(document.querySelector(".tokyo_tm_modalbox .top_image .main").style.backgroundImage).toContain(
       "/img/portfolio/1.jpg"
     );

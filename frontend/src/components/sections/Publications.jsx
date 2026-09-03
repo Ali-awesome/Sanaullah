@@ -114,12 +114,8 @@ export default function Publications({ posts }) {
               {displayed && (
                 <div className="description_wrap">
                   <div className="service_popup_informations w-full">
-                    <div className="image relative z-[-1] float-left mb-10 h-[340px] w-full max-lg:h-[260px] max-sm:h-[180px]">
-                      <img src="/img/thumbs/4-2.jpg" alt="" className="min-w-full" />
-                      <div
-                        className="main absolute inset-0 bg-cover bg-center bg-no-repeat"
-                        style={{ backgroundImage: `url(${displayed.image})` }}
-                      ></div>
+                    <div className="image relative z-[-1] float-left mb-10 w-full">
+                      <img src={displayed.image} alt={displayed.title} className="block h-auto w-full" />
                     </div>
                     <div className="main_title float-left mb-[23px] w-full">
                       <h3 className="text-[23px] font-semibold">{displayed.title}</h3>

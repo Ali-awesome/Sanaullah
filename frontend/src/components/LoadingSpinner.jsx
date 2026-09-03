@@ -5,11 +5,16 @@
  * so this is a plain, lightweight "checking..." indicator instead. See
  * App.jsx for why this has to be a separate component from Preloader
  * rather than the same element handling both states.
+ *
+ * Matches Preloader's black background rather than white: this is the very
+ * first thing painted, immediately followed by the Preloader curtain, and
+ * both need the same background or the swap between them flashes white for
+ * a frame.
  */
 export default function LoadingSpinner() {
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-white">
-      <div className="h-10 w-10 animate-spin rounded-full border-2 border-black/10 border-t-black" />
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-white" />
     </div>
   );
 }
