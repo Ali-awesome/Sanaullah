@@ -17,7 +17,7 @@ export default function Service({ profile }) {
             <div className="title_flex">
               <div className="left">
                 <span>Services</span>
-                <h2>What I Do</h2>
+                <h1 className="text-[30px] font-bold">What I Do</h1>
               </div>
             </div>
           </div>

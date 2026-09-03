@@ -40,7 +40,7 @@ export default function Contact({ profile }) {
           <div className="title_flex">
             <div className="left">
               <span>Contact</span>
-              <h2>Get in Touch</h2>
+              <h1 className="text-[30px] font-bold">Get in Touch</h1>
             </div>
           </div>
         </div>

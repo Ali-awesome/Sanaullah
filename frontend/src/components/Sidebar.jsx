@@ -88,7 +88,7 @@ export default function Sidebar({ profile, active, onNavigate }) {
                 go("home");
               }}
             >
-              <h3 className="font-poppins text-[31px] font-black tracking-[5px]">{profile.name.split(" ")[0]}</h3>
+              <h3 className="font-poppins text-[31px] font-black tracking-[5px]">{profile.name.split(" ")[1]}</h3>
             </a>
           </div>
           <div className="menu w-full py-[50px]">
@@ -97,7 +97,7 @@ export default function Sidebar({ profile, active, onNavigate }) {
             </ul>
           </div>
           <div className="copyright w-full">
-            <p className="font-heading text-[15px] leading-[25px] text-[#999]">
+            <p className="font-heading text-[12px] leading-[25px] text-[#999]">
               &copy; {new Date().getFullYear()} {profile.name}
             </p>
           </div>

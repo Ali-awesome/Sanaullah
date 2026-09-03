@@ -49,7 +49,7 @@ export default function About({ profile }) {
             <div className="title_flex">
               <div className="left">
                 <span>About</span>
-                <h2>{about.heading}</h2>
+                <h1 className="text-[30px] font-bold">{about.heading}</h1>
               </div>
             </div>
           </div>

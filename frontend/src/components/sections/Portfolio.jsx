@@ -93,7 +93,7 @@ export default function Portfolio({ profile, gallery = [] }) {
             <div className="title_flex">
               <div className="left">
                 <span>Portfolio</span>
-                <h2>Featured Work</h2>
+                <h1 className="text-[30px] font-bold">Featured Work</h1>
               </div>
               <div className="portfolio_filter max-md:pt-12">
                 <ul className="m-0 list-none">

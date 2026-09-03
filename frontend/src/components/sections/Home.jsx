@@ -16,23 +16,23 @@ export default function Home({ profile }) {
             ></div>
           </div>
           <div className="details ml-20 max-md:ml-0">
-            <h1 className="name mb-[14px] text-[55px] font-extrabold uppercase max-xl:mb-[10px] max-xl:text-[48px] max-sm:text-[30px]">
+            <h1 className="name font-poppins mb-[14px] text-[55px] font-extrabold max-xl:mb-[10px] max-xl:text-[48px] max-sm:text-[30px]">
               {profile.name.split(" ")[0]} <span>{profile.name.split(" ").slice(1).join(" ")}</span>
             </h1>
             <p className="job mb-[25px] max-w-[450px] font-heading font-medium max-xl:mb-[22px]">{profile.tagline}</p>
             <div className="social w-full float-left">
               <ul className="m-0 list-none">
-                <li className="mr-2 inline-block last:mr-0">
+                <li className="mr-4 inline-block last:mr-0">
                   <a href={`mailto:${profile.email}`} aria-label="Email" className="text-[20px] text-black">
                     <FaEnvelope />
                   </a>
                 </li>
-                <li className="mr-2 inline-block last:mr-0">
+                <li className="mr-4 inline-block last:mr-0">
                   <a href={profile.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn" className="text-[20px] text-black">
                     <FaLinkedin />
                   </a>
                 </li>
-                <li className="mr-2 inline-block last:mr-0">
+                <li className="mr-4 inline-block last:mr-0">
                   <a href={profile.github} target="_blank" rel="noreferrer" aria-label="GitHub" className="text-[20px] text-black">
                     <FaGithub />
                   </a>

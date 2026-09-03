@@ -17,7 +17,7 @@ export default function Publications({ posts }) {
             <div className="title_flex">
               <div className="left">
                 <span>News</span>
-                <h2>Publications &amp; Learning</h2>
+                <h1 className="text-[30px] font-bold">Publications &amp; Learning</h1>
               </div>
             </div>
           </div>

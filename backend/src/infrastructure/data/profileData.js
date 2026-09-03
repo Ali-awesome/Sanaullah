@@ -8,7 +8,7 @@ export const profileData = {
   name: "Mohammad Sanaullah",
   title: "Product Analyst",
   tagline:
-    "I turn business needs into data-driven product decisions, blending Agile product analysis with hands-on MERN/Django and ML engineering.",
+    "I build products where user needs, business strategy, and data come together. As a Product Manager with a Data Science background, I translate complex problems and insights into products that drive meaningful outcomes.",
   avatarImage: "/img/slider/1.jpg",
   location: "Dhaka, Bangladesh",
   email: "msanaullahali07@gmail.com",
