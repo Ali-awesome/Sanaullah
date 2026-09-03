@@ -23,6 +23,15 @@
   --animate-morph: morph 8s ease-in-out infinite 1s;
 }
 
+/* A common desktop/laptop shape the width-based breakpoints above don't
+   catch at all: plenty wide (>1200px, so still gets the desktop modal
+   layout) but short in *height* (a 13"-14" laptop's actual resolution,
+   e.g. 1366x700 or 1440x816) — where the modal popups' fixed-px vertical
+   chrome was still eating into limited height regardless of how much
+   horizontal room existed. Lets `short:` size that chrome down whenever
+   height is actually the scarce dimension, independent of width. */
+@custom-variant short (@media (max-height: 920px));
+
 @keyframes fadeInLeft {
   0% {
     opacity: 0;
@@ -102,9 +111,13 @@
   .tokyo_tm_title {
     @apply relative float-left clear-both mb-[62px] w-full;
   }
-  .tokyo_tm_title h2,
-  .tokyo_tm_title h3 {
-    @apply font-heading font-extrabold;
+  /* Every section's own title (About/Service/Portfolio/News/Contact) is an
+     <h1> — a deliberate choice for this app (each section behaves like its
+     own "page"), not the usual single-h1-per-document convention. Sized to
+     match the original template's h3 visual scale. Kept as one shared rule
+     so it's not repeated as an inline class on every section's title. */
+  .tokyo_tm_title h1 {
+    @apply text-[30px] font-bold;
   }
   .tokyo_tm_title span {
     @apply mb-[11px] inline-block bg-black/4 px-[10px] py-1 font-heading text-xs font-semibold uppercase text-[#333];
@@ -211,7 +224,7 @@
     @apply left-auto right-0;
   }
   #preloader .loader_line {
-    @apply relative m-auto h-[250px] w-px overflow-hidden transition-all duration-[800ms] ease-in-out;
+    @apply relative m-auto h-[250px] w-px overflow-hidden transition-all duration-[800ms] ease-in-out max-sm:h-[160px] short:h-[160px];
   }
   .loader_line::before {
     content: "";
@@ -363,8 +376,12 @@
   .tokyo_tm_modalbox .container {
     @apply h-screen;
   }
+  /* top/bottom insets shrink on smaller screens (the original theme kept
+     these fixed at 70px always) so more of a shorter or mobile viewport's
+     actual height is available to the popup's own content, reducing how
+     often — and how much — description_wrap below needs to scroll. */
   .tokyo_tm_modalbox .box_inner {
-    @apply invisible absolute left-1/2 top-[70px] bottom-[70px] z-[1] mt-[-20px] w-[968px] max-lg:w-[500px] max-sm:w-[300px] -translate-x-1/2 bg-white opacity-0 transition-all duration-300 ease-in-out;
+    @apply invisible absolute left-1/2 top-[70px] bottom-[70px] z-[1] mt-[-20px] w-[968px] max-lg:top-10 max-lg:bottom-10 max-lg:w-[500px] max-sm:top-5 max-sm:bottom-5 max-sm:w-[300px] short:top-5 short:bottom-5 -translate-x-1/2 bg-white opacity-0 transition-all duration-300 ease-in-out;
     transition-delay: 0.3s;
   }
   .tokyo_tm_modalbox.opened .box_inner {
@@ -376,8 +393,18 @@
   .tokyo_tm_modalbox .close a {
     @apply relative flex h-10 w-10 items-center justify-center rounded-[10px] border-2 border-white text-white transition-all duration-300 ease-in-out hover:rounded-full max-sm:h-[30px] max-sm:w-[30px] max-sm:text-sm;
   }
+  /* Scrolling is expected and fine whenever a popup's content is taller
+     than the box — the earlier attempt to force everything to fit inside
+     one screenful by shrinking the hero image down to a `min-height:24px`
+     sliver looked broken (an ugly, barely-visible strip) and still left the
+     last item flush against the very bottom edge with no breathing room.
+     `pb-24`/`pb-16`/`pb-10` below (bigger than the matching top padding)
+     guarantee real whitespace under the last element — Share icons,
+     summary text, whatever — once scrolled all the way down, and the hero
+     image below keeps a normal, good-looking size instead of fighting for
+     zero overflow. */
   .tokyo_tm_modalbox .description_wrap {
-    @apply relative float-left h-full w-full overflow-hidden overflow-y-scroll p-[50px] max-lg:p-10 max-sm:p-5;
+    @apply relative float-left h-full w-full overflow-hidden overflow-y-scroll p-[50px] pb-24 max-lg:p-10 max-lg:pb-16 max-sm:p-5 max-sm:pb-10;
     scrollbar-width: thin;
     scrollbar-color: #999 #fff;
   }

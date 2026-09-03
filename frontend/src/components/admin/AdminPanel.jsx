@@ -1,22 +1,19 @@
 import { useEffect, useState } from "react";
-import { FaGripVertical, FaChevronUp, FaChevronDown } from "react-icons/fa";
 import {
   fetchContactMessages,
-  fetchPosts,
-  createPost,
-  updatePost,
-  reorderPosts,
-  deletePost,
-  fetchGallery,
-  createGalleryPhoto,
-  updateGalleryPhoto,
-  reorderGalleryPhotos,
-  deleteGalleryPhoto,
+  postsClient,
+  galleryClient,
+  portfolioProjectsClient,
+  fetchCvMeta,
+  uploadCv,
 } from "../../api/client.js";
+import { useOrderedAdminResource } from "../../hooks/useOrderedAdminResource.js";
+import AdminOrderedList from "./AdminOrderedList.jsx";
 
 const TOKEN_KEY = "portfolio_admin_token";
 const BLANK_POST = { title: "", source: "", date: "", summary: "", image: "", link: "" };
-const BLANK_PHOTO = { name: "", image: "" };
+const BLANK_PHOTO = { name: "", image: "", description: "" };
+const BLANK_PROJECT = { title: "", category: "", client: "", date: "", image: "", summary: "", link: "" };
 
 const inputClass =
   "mb-3 block w-full rounded-md border border-[#ddd] px-3 py-[10px] font-[inherit] text-[15px] focus:border-black/50 focus:outline-none";
@@ -24,45 +21,22 @@ const buttonClass =
   "block w-full rounded-md border-none bg-black px-4 py-[10px] font-[inherit] text-white disabled:cursor-not-allowed disabled:opacity-60";
 const secondaryButtonClass =
   "block w-full rounded-md border border-[#ddd] bg-white px-4 py-[10px] font-[inherit] text-black";
-const smallButtonClass = "h-fit rounded-md border border-[#ddd] bg-white px-3 py-[6px]";
-const iconButtonClass = "flex h-7 w-7 items-center justify-center rounded-md border border-[#ddd] bg-white disabled:cursor-not-allowed disabled:opacity-40";
-const dangerButtonClass = "h-fit rounded-md border border-[#c0392b] bg-white px-3 py-[6px] text-[#c0392b]";
-
-// Swaps the item at `index` with its neighbor in `direction` (-1 up, +1
-// down); returns the array unchanged if already at that end. Shared by both
-// the drag handles' drop logic (via array splice, see below) and the
-// keyboard-accessible move buttons — dragging isn't operable without a
-// mouse/touch, so the arrows are the only way to reorder without one.
-function moveItem(list, index, direction) {
-  const target = index + direction;
-  if (target < 0 || target >= list.length) return list;
-  const next = [...list];
-  [next[index], next[target]] = [next[target], next[index]];
-  return next;
-}
 
 export default function AdminPanel() {
   const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY) || "");
   const [tokenInput, setTokenInput] = useState("");
   const [messages, setMessages] = useState(null);
-  const [posts, setPosts] = useState(null);
-  const [gallery, setGallery] = useState(null);
   const [error, setError] = useState("");
-  const [form, setForm] = useState(BLANK_POST);
-  const [photoForm, setPhotoForm] = useState(BLANK_PHOTO);
-  const [saving, setSaving] = useState(false);
-  const [savingPhoto, setSavingPhoto] = useState(false);
-  // null = the form above is creating a new post/photo; otherwise it's the
-  // id of the one currently being edited, and the same form/submit handler
-  // updates it in place instead of creating a new one.
-  const [editingPostId, setEditingPostId] = useState(null);
-  const [editingPhotoId, setEditingPhotoId] = useState(null);
+  const [cvMeta, setCvMeta] = useState(null);
+  const [cvFile, setCvFile] = useState(null);
+  const [uploadingCv, setUploadingCv] = useState(false);
 
   // The contact-inbox fetch is the only one gated on the admin token — a
   // failure there means the token itself is bad (or was revoked), so that's
-  // the only case that should log the admin out. Posts/gallery are public,
-  // unauthenticated endpoints: a transient network hiccup on either of those
-  // used to force a valid, logged-in admin back out to the token screen too.
+  // the only case that should log the admin out. Everything else is a
+  // public, unauthenticated read: a transient network hiccup on any of
+  // those used to force a valid, logged-in admin back out to the token
+  // screen too.
   const load = (activeToken) => {
     setError("");
     fetchContactMessages(activeToken)
@@ -73,13 +47,34 @@ export default function AdminPanel() {
         sessionStorage.removeItem(TOKEN_KEY);
         setToken("");
       });
-    fetchPosts()
-      .then(setPosts)
-      .catch((err) => setError(err.message));
-    fetchGallery()
-      .then(setGallery)
-      .catch((err) => setError(err.message));
+    postsClient.fetchAll().then(posts.setItems).catch((err) => setError(err.message));
+    galleryClient.fetchAll().then(gallery.setItems).catch((err) => setError(err.message));
+    portfolioProjectsClient.fetchAll().then(portfolioProjects.setItems).catch((err) => setError(err.message));
+    fetchCvMeta().then(setCvMeta).catch(() => {});
   };
+
+  const posts = useOrderedAdminResource({
+    client: postsClient,
+    blankForm: BLANK_POST,
+    token,
+    onError: setError,
+    afterChange: () => load(token),
+  });
+  const gallery = useOrderedAdminResource({
+    client: galleryClient,
+    blankForm: BLANK_PHOTO,
+    token,
+    onError: setError,
+    afterChange: () => load(token),
+  });
+  const portfolioProjects = useOrderedAdminResource({
+    client: portfolioProjectsClient,
+    blankForm: BLANK_PROJECT,
+    token,
+    onError: setError,
+    afterChange: () => load(token),
+  });
+  const existingCategories = [...new Set((portfolioProjects.items || []).map((p) => p.category))];
 
   useEffect(() => {
     if (token) load(token);
@@ -96,175 +91,23 @@ export default function AdminPanel() {
     sessionStorage.removeItem(TOKEN_KEY);
     setToken("");
     setMessages(null);
-    setPosts(null);
   };
 
-  const startEditPost = (post) => {
-    setEditingPostId(post.id);
-    setForm({
-      title: post.title || "",
-      source: post.source || "",
-      date: post.date || "",
-      summary: post.summary || "",
-      image: post.image || "",
-      link: post.link || "",
-    });
-    setError("");
-  };
-
-  const cancelEditPost = () => {
-    setEditingPostId(null);
-    setForm(BLANK_POST);
-  };
-
-  const handleSubmitPost = async (e) => {
+  const handleUploadCv = async (e) => {
     e.preventDefault();
-    setSaving(true);
+    if (!cvFile) return;
+    setUploadingCv(true);
     setError("");
     try {
-      if (editingPostId) {
-        await updatePost(editingPostId, form, token);
-      } else {
-        await createPost(form, token);
-      }
-      setForm(BLANK_POST);
-      setEditingPostId(null);
-      load(token);
+      const result = await uploadCv(cvFile, token);
+      setCvMeta(result.data);
+      setCvFile(null);
+      e.target.reset();
     } catch (err) {
       setError(err.message);
     } finally {
-      setSaving(false);
+      setUploadingCv(false);
     }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await deletePost(id, token);
-      if (editingPostId === id) cancelEditPost();
-      load(token);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  // Dragging reorders the local list live (as you drag over another row) so
-  // the drop target is obvious; the actual persist call only fires once, on
-  // drop. `dragged` tracks which row's grip is currently being dragged.
-  const [draggedPostId, setDraggedPostId] = useState(null);
-
-  const persistPostOrder = async (ordered) => {
-    try {
-      await reorderPosts(ordered.map((p) => p.id), token);
-    } catch (err) {
-      setError(err.message);
-      load(token); // the write failed — resync with what the server actually has
-    }
-  };
-
-  const handlePostDragOver = (overId) => (e) => {
-    e.preventDefault();
-    if (draggedPostId === null || draggedPostId === overId) return;
-    setPosts((current) => {
-      const from = current.findIndex((p) => p.id === draggedPostId);
-      const to = current.findIndex((p) => p.id === overId);
-      if (from === -1 || to === -1 || from === to) return current;
-      const next = [...current];
-      const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved);
-      return next;
-    });
-  };
-
-  const handlePostDrop = () => {
-    if (draggedPostId === null) return;
-    setDraggedPostId(null);
-    persistPostOrder(posts);
-  };
-
-  const movePost = (index, direction) => {
-    const next = moveItem(posts, index, direction);
-    if (next === posts) return;
-    setPosts(next);
-    persistPostOrder(next);
-  };
-
-  const startEditPhoto = (photo) => {
-    setEditingPhotoId(photo.id);
-    setPhotoForm({ name: photo.name || "", image: photo.image || "" });
-    setError("");
-  };
-
-  const cancelEditPhoto = () => {
-    setEditingPhotoId(null);
-    setPhotoForm(BLANK_PHOTO);
-  };
-
-  const handleSubmitPhoto = async (e) => {
-    e.preventDefault();
-    setSavingPhoto(true);
-    setError("");
-    try {
-      if (editingPhotoId) {
-        await updateGalleryPhoto(editingPhotoId, photoForm, token);
-      } else {
-        await createGalleryPhoto(photoForm, token);
-      }
-      setPhotoForm(BLANK_PHOTO);
-      setEditingPhotoId(null);
-      load(token);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSavingPhoto(false);
-    }
-  };
-
-  const handleDeletePhoto = async (id) => {
-    try {
-      await deleteGalleryPhoto(id, token);
-      if (editingPhotoId === id) cancelEditPhoto();
-      load(token);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const [draggedPhotoId, setDraggedPhotoId] = useState(null);
-
-  const persistPhotoOrder = async (ordered) => {
-    try {
-      await reorderGalleryPhotos(ordered.map((p) => p.id), token);
-    } catch (err) {
-      setError(err.message);
-      load(token); // the write failed — resync with what the server actually has
-    }
-  };
-
-  const handlePhotoDragOver = (overId) => (e) => {
-    e.preventDefault();
-    if (draggedPhotoId === null || draggedPhotoId === overId) return;
-    setGallery((current) => {
-      const from = current.findIndex((p) => p.id === draggedPhotoId);
-      const to = current.findIndex((p) => p.id === overId);
-      if (from === -1 || to === -1 || from === to) return current;
-      const next = [...current];
-      const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved);
-      return next;
-    });
-  };
-
-  const handlePhotoDrop = () => {
-    if (draggedPhotoId === null) return;
-    setDraggedPhotoId(null);
-    persistPhotoOrder(gallery);
-  };
-
-  const movePhoto = (index, direction) => {
-    const next = moveItem(gallery, index, direction);
-    if (next === gallery) return;
-    setGallery(next);
-    persistPhotoOrder(next);
   };
 
   if (!token) {
@@ -301,53 +144,53 @@ export default function AdminPanel() {
         {error && <p className="text-sm text-[#c0392b]">{error}</p>}
 
         <section className="mt-[30px] border-t border-[#eee] pt-5">
-          <h3 className="mb-3 mt-0 text-lg font-semibold">{editingPostId ? "Edit Post" : "Add a Post"}</h3>
-          <form onSubmit={handleSubmitPost} className="flex flex-col gap-[10px]">
+          <h3 className="mb-3 mt-0 text-lg font-semibold">{posts.editingId ? "Edit Post" : "Add a Post"}</h3>
+          <form onSubmit={posts.handleSubmit} className="flex flex-col gap-[10px]">
             <input
               className={inputClass}
               placeholder="Title"
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              value={posts.form.title}
+              onChange={(e) => posts.setForm({ ...posts.form, title: e.target.value })}
               required
             />
             <input
               className={inputClass}
               placeholder="Source (e.g. Personal Blog)"
-              value={form.source}
-              onChange={(e) => setForm({ ...form, source: e.target.value })}
+              value={posts.form.source}
+              onChange={(e) => posts.setForm({ ...posts.form, source: e.target.value })}
               required
             />
             <input
               className={inputClass}
               placeholder="Date (optional, e.g. September 2026)"
-              value={form.date}
-              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              value={posts.form.date}
+              onChange={(e) => posts.setForm({ ...posts.form, date: e.target.value })}
             />
             <input
               className={inputClass}
               placeholder="Image path (optional, defaults provided)"
-              value={form.image}
-              onChange={(e) => setForm({ ...form, image: e.target.value })}
+              value={posts.form.image}
+              onChange={(e) => posts.setForm({ ...posts.form, image: e.target.value })}
             />
             <input
               className={inputClass}
               placeholder="Link (optional)"
-              value={form.link}
-              onChange={(e) => setForm({ ...form, link: e.target.value })}
+              value={posts.form.link}
+              onChange={(e) => posts.setForm({ ...posts.form, link: e.target.value })}
             />
             <textarea
               className={`${inputClass} min-h-[80px]`}
               placeholder="Summary"
-              value={form.summary}
-              onChange={(e) => setForm({ ...form, summary: e.target.value })}
+              value={posts.form.summary}
+              onChange={(e) => posts.setForm({ ...posts.form, summary: e.target.value })}
               required
             />
             <div className="flex gap-[10px]">
-              <button className={buttonClass} type="submit" disabled={saving}>
-                {saving ? "Saving…" : editingPostId ? "Save Changes" : "Add Post"}
+              <button className={buttonClass} type="submit" disabled={posts.saving}>
+                {posts.saving ? "Saving…" : posts.editingId ? "Save Changes" : "Add Post"}
               </button>
-              {editingPostId && (
-                <button type="button" className={secondaryButtonClass} onClick={cancelEditPost}>
+              {posts.editingId && (
+                <button type="button" className={secondaryButtonClass} onClick={posts.cancelEdit}>
                   Cancel
                 </button>
               )}
@@ -356,88 +199,60 @@ export default function AdminPanel() {
         </section>
 
         <section className="mt-[30px] border-t border-[#eee] pt-5">
-          <h3 className="mb-3 mt-0 text-lg font-semibold">Posts ({posts ? posts.length : "…"})</h3>
+          <h3 className="mb-3 mt-0 text-lg font-semibold">Posts ({posts.items ? posts.items.length : "…"})</h3>
           <p className="mb-3 text-sm text-[#767676]">
-            Drag the <FaGripVertical className="inline" aria-hidden="true" /> handle to reorder — this is the order
-            they'll appear in on the site.
+            Drag to reorder — this is the order they'll appear in on the site.
           </p>
-          {posts?.map((p, i) => (
-            <div
-              key={p.id}
-              draggable
-              onDragStart={() => setDraggedPostId(p.id)}
-              onDragOver={handlePostDragOver(p.id)}
-              onDrop={handlePostDrop}
-              onDragEnd={() => setDraggedPostId(null)}
-              className={`flex items-start justify-between gap-3 border-b border-[#f0f0f0] py-3 ${
-                draggedPostId === p.id ? "opacity-40" : ""
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <FaGripVertical className="mt-1 shrink-0 cursor-grab text-[#bbb] active:cursor-grabbing" aria-hidden="true" />
-                <div>
-                  <strong>{p.title}</strong>
-                  <div className="text-sm text-[#767676]">
-                    {p.source}
-                    {p.date ? ` — ${p.date}` : ""}
-                  </div>
+          <AdminOrderedList
+            resource={posts}
+            itemLabel={(p) => `"${p.title}"`}
+            renderContent={(p) => (
+              <div>
+                <strong>{p.title}</strong>
+                <div className="text-sm text-[#767676]">
+                  {p.source}
+                  {p.date ? ` — ${p.date}` : ""}
                 </div>
               </div>
-              <div className="flex shrink-0 gap-[8px]">
-                <button
-                  className={iconButtonClass}
-                  onClick={() => movePost(i, -1)}
-                  disabled={i === 0}
-                  aria-label={`Move "${p.title}" up`}
-                >
-                  <FaChevronUp />
-                </button>
-                <button
-                  className={iconButtonClass}
-                  onClick={() => movePost(i, 1)}
-                  disabled={i === posts.length - 1}
-                  aria-label={`Move "${p.title}" down`}
-                >
-                  <FaChevronDown />
-                </button>
-                <button className={smallButtonClass} onClick={() => startEditPost(p)}>
-                  Edit
-                </button>
-                <button className={dangerButtonClass} onClick={() => handleDelete(p.id)}>
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+            )}
+          />
         </section>
 
         <section className="mt-[30px] border-t border-[#eee] pt-5">
-          <h3 className="mb-3 mt-0 text-lg font-semibold">{editingPhotoId ? "Edit Gallery Photo" : "Add a Gallery Photo"}</h3>
+          <h3 className="mb-3 mt-0 text-lg font-semibold">
+            {gallery.editingId ? "Edit Gallery Photo" : "Add a Gallery Photo"}
+          </h3>
           <p className="mb-3 text-sm text-[#767676]">
             Shows in the Portfolio section's "All" tab. Paste a path already under frontend/public/img/ (e.g.
             /img/portfolio/7.jpg) or any image URL — see the README for how to add new image files.
           </p>
-          <form onSubmit={handleSubmitPhoto} className="flex flex-col gap-[10px]">
+          <form onSubmit={gallery.handleSubmit} className="flex flex-col gap-[10px]">
             <input
               className={inputClass}
               placeholder="Name"
-              value={photoForm.name}
-              onChange={(e) => setPhotoForm({ ...photoForm, name: e.target.value })}
+              value={gallery.form.name}
+              onChange={(e) => gallery.setForm({ ...gallery.form, name: e.target.value })}
               required
             />
             <input
               className={inputClass}
               placeholder="Image path or URL"
-              value={photoForm.image}
-              onChange={(e) => setPhotoForm({ ...photoForm, image: e.target.value })}
+              value={gallery.form.image}
+              onChange={(e) => gallery.setForm({ ...gallery.form, image: e.target.value })}
               required
             />
+            <textarea
+              className={`${inputClass} min-h-[60px]`}
+              placeholder="Description (optional) — shown when a visitor opens the photo"
+              value={gallery.form.description}
+              onChange={(e) => gallery.setForm({ ...gallery.form, description: e.target.value })}
+            />
             <div className="flex gap-[10px]">
-              <button className={buttonClass} type="submit" disabled={savingPhoto}>
-                {savingPhoto ? "Saving…" : editingPhotoId ? "Save Changes" : "Add Photo"}
+              <button className={buttonClass} type="submit" disabled={gallery.saving}>
+                {gallery.saving ? "Saving…" : gallery.editingId ? "Save Changes" : "Add Photo"}
               </button>
-              {editingPhotoId && (
-                <button type="button" className={secondaryButtonClass} onClick={cancelEditPhoto}>
+              {gallery.editingId && (
+                <button type="button" className={secondaryButtonClass} onClick={gallery.cancelEdit}>
                   Cancel
                 </button>
               )}
@@ -446,54 +261,136 @@ export default function AdminPanel() {
         </section>
 
         <section className="mt-[30px] border-t border-[#eee] pt-5">
-          <h3 className="mb-3 mt-0 text-lg font-semibold">Gallery Photos ({gallery ? gallery.length : "…"})</h3>
+          <h3 className="mb-3 mt-0 text-lg font-semibold">
+            Gallery Photos ({gallery.items ? gallery.items.length : "…"})
+          </h3>
           <p className="mb-3 text-sm text-[#767676]">
-            Drag the <FaGripVertical className="inline" aria-hidden="true" /> handle to reorder — this is the order
-            they'll appear in under Portfolio's "All" tab.
+            Drag to reorder — this is the order they'll appear in under Portfolio's "All" tab.
           </p>
-          {gallery?.map((g, i) => (
-            <div
-              key={g.id}
-              draggable
-              onDragStart={() => setDraggedPhotoId(g.id)}
-              onDragOver={handlePhotoDragOver(g.id)}
-              onDrop={handlePhotoDrop}
-              onDragEnd={() => setDraggedPhotoId(null)}
-              className={`flex items-start justify-between gap-3 border-b border-[#f0f0f0] py-3 ${
-                draggedPhotoId === g.id ? "opacity-40" : ""
-              }`}
-            >
+          <AdminOrderedList
+            resource={gallery}
+            itemLabel={(g) => `"${g.name}"`}
+            renderContent={(g) => (
               <div className="flex items-center gap-3">
-                <FaGripVertical className="shrink-0 cursor-grab text-[#bbb] active:cursor-grabbing" aria-hidden="true" />
                 <img src={g.image} alt="" className="h-11 w-11 rounded object-cover" />
                 <strong>{g.name}</strong>
               </div>
-              <div className="flex shrink-0 gap-[8px]">
-                <button
-                  className={iconButtonClass}
-                  onClick={() => movePhoto(i, -1)}
-                  disabled={i === 0}
-                  aria-label={`Move "${g.name}" up`}
-                >
-                  <FaChevronUp />
+            )}
+          />
+        </section>
+
+        <section className="mt-[30px] border-t border-[#eee] pt-5">
+          <h3 className="mb-3 mt-0 text-lg font-semibold">
+            {portfolioProjects.editingId ? "Edit Portfolio Project" : "Add a Portfolio Project"}
+          </h3>
+          <p className="mb-3 text-sm text-[#767676]">
+            These are the category tabs under Portfolio (Data Analytics, AI/ML, etc.) — separate from the photo
+            gallery above. The category you type becomes (or reuses) a tab automatically.
+          </p>
+          <form onSubmit={portfolioProjects.handleSubmit} className="flex flex-col gap-[10px]">
+            <input
+              className={inputClass}
+              placeholder="Title"
+              value={portfolioProjects.form.title}
+              onChange={(e) => portfolioProjects.setForm({ ...portfolioProjects.form, title: e.target.value })}
+              required
+            />
+            <input
+              className={inputClass}
+              list="portfolio-categories"
+              placeholder="Category (e.g. Data Analytics, AI/ML)"
+              value={portfolioProjects.form.category}
+              onChange={(e) => portfolioProjects.setForm({ ...portfolioProjects.form, category: e.target.value })}
+              required
+            />
+            <datalist id="portfolio-categories">
+              {existingCategories.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
+            <input
+              className={inputClass}
+              placeholder="Client (optional)"
+              value={portfolioProjects.form.client}
+              onChange={(e) => portfolioProjects.setForm({ ...portfolioProjects.form, client: e.target.value })}
+            />
+            <input
+              className={inputClass}
+              placeholder="Date (optional, e.g. January 2026)"
+              value={portfolioProjects.form.date}
+              onChange={(e) => portfolioProjects.setForm({ ...portfolioProjects.form, date: e.target.value })}
+            />
+            <input
+              className={inputClass}
+              placeholder="Image path (optional, defaults provided)"
+              value={portfolioProjects.form.image}
+              onChange={(e) => portfolioProjects.setForm({ ...portfolioProjects.form, image: e.target.value })}
+            />
+            <input
+              className={inputClass}
+              placeholder="Link to original work (optional)"
+              value={portfolioProjects.form.link}
+              onChange={(e) => portfolioProjects.setForm({ ...portfolioProjects.form, link: e.target.value })}
+            />
+            <textarea
+              className={`${inputClass} min-h-[80px]`}
+              placeholder="Summary"
+              value={portfolioProjects.form.summary}
+              onChange={(e) => portfolioProjects.setForm({ ...portfolioProjects.form, summary: e.target.value })}
+              required
+            />
+            <div className="flex gap-[10px]">
+              <button className={buttonClass} type="submit" disabled={portfolioProjects.saving}>
+                {portfolioProjects.saving ? "Saving…" : portfolioProjects.editingId ? "Save Changes" : "Add Project"}
+              </button>
+              {portfolioProjects.editingId && (
+                <button type="button" className={secondaryButtonClass} onClick={portfolioProjects.cancelEdit}>
+                  Cancel
                 </button>
-                <button
-                  className={iconButtonClass}
-                  onClick={() => movePhoto(i, 1)}
-                  disabled={i === gallery.length - 1}
-                  aria-label={`Move "${g.name}" down`}
-                >
-                  <FaChevronDown />
-                </button>
-                <button className={smallButtonClass} onClick={() => startEditPhoto(g)}>
-                  Edit
-                </button>
-                <button className={dangerButtonClass} onClick={() => handleDeletePhoto(g.id)}>
-                  Delete
-                </button>
-              </div>
+              )}
             </div>
-          ))}
+          </form>
+        </section>
+
+        <section className="mt-[30px] border-t border-[#eee] pt-5">
+          <h3 className="mb-3 mt-0 text-lg font-semibold">
+            Portfolio Projects ({portfolioProjects.items ? portfolioProjects.items.length : "…"})
+          </h3>
+          <p className="mb-3 text-sm text-[#767676]">Drag to reorder within each category tab.</p>
+          <AdminOrderedList
+            resource={portfolioProjects}
+            itemLabel={(p) => `"${p.title}"`}
+            renderContent={(p) => (
+              <div>
+                <strong>{p.title}</strong>
+                <div className="text-sm text-[#767676]">
+                  {p.category}
+                  {p.date ? ` — ${p.date}` : ""}
+                </div>
+              </div>
+            )}
+          />
+        </section>
+
+        <section className="mt-[30px] border-t border-[#eee] pt-5">
+          <h3 className="mb-3 mt-0 text-lg font-semibold">CV</h3>
+          <p className="mb-3 text-sm text-[#767676]">
+            {cvMeta
+              ? `Current file: ${cvMeta.filename} (uploaded ${new Date(cvMeta.uploadedAt).toLocaleString()})`
+              : "Loading current CV…"}
+            {" "}Uploading a new one replaces it everywhere the site links to "Download CV".
+          </p>
+          <form onSubmit={handleUploadCv} className="flex flex-col gap-[10px]">
+            <input
+              className={inputClass}
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => setCvFile(e.target.files?.[0] || null)}
+            />
+            <button className={buttonClass} type="submit" disabled={uploadingCv || !cvFile}>
+              {uploadingCv ? "Uploading…" : "Upload New CV"}
+            </button>
+          </form>
         </section>
 
         <section className="mt-[30px] border-t border-[#eee] pt-5">

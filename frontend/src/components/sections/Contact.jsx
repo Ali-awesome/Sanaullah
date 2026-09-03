@@ -35,12 +35,12 @@ export default function Contact({ profile }) {
 
   return (
     <div className="container">
-      <div className="tokyo_tm_contact float-left w-full py-[100px] max-lg:pt-[130px]">
+      <div className="tokyo_tm_contact float-left w-full py-[100px] max-lg:pt-[130px] max-sm:pt-20">
         <div className="tokyo_tm_title">
           <div className="title_flex">
             <div className="left">
               <span>Contact</span>
-              <h1 className="text-[30px] font-bold">Get in Touch</h1>
+              <h1>Get in Touch</h1>
             </div>
           </div>
         </div>

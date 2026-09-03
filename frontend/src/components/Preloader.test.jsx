@@ -30,13 +30,20 @@ describe("Preloader", () => {
     expect(document.getElementById("preloader")).not.toBeInTheDocument();
   });
 
-  it("skips the animation and removes immediately on mobile user agents", () => {
+  it("plays the same curtain on mobile user agents instead of skipping it", () => {
     const original = navigator.userAgent;
     vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
       "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)"
     );
 
     render(<Preloader />);
+    expect(document.getElementById("preloader")).toBeInTheDocument();
+    expect(document.getElementById("preloader")).not.toHaveClass("preloaded");
+
+    act(() => vi.advanceTimersByTime(1300));
+    expect(document.getElementById("preloader")).toHaveClass("preloaded");
+
+    act(() => vi.advanceTimersByTime(1200));
     expect(document.getElementById("preloader")).not.toBeInTheDocument();
 
     vi.spyOn(navigator, "userAgent", "get").mockReturnValue(original);

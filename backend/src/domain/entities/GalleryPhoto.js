@@ -7,7 +7,7 @@ import { DomainValidationError } from "./ContactMessage.js";
  * stored.
  */
 export class GalleryPhoto {
-  constructor({ name, image }) {
+  constructor({ name, image, description }) {
     const cleanName = (name || "").trim();
     const cleanImage = (image || "").trim();
 
@@ -16,6 +16,9 @@ export class GalleryPhoto {
 
     this.name = cleanName;
     this.image = cleanImage;
+    // Optional — shown in the lightbox when a visitor clicks the photo;
+    // not every photo needs one.
+    this.description = (description || "").trim();
     this.createdAt = new Date();
   }
 }

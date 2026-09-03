@@ -2,14 +2,19 @@ import { describe, it, expect } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Portfolio from "./Portfolio.jsx";
-import { sampleProfile, samplePortfolio, sampleGallery } from "../../test/fixtures.js";
+import { samplePortfolio, sampleGallery } from "../../test/fixtures.js";
 
-const profile = { ...sampleProfile, portfolio: samplePortfolio };
+// Distinct from sampleGallery (only 2 photos, not enough to trigger paging).
+const manyPhotos = Array.from({ length: 10 }, (_, i) => ({
+  id: `p${i}`,
+  name: `Photo ${i}`,
+  image: `/img/portfolio/${i}.jpg`,
+}));
 
 describe("Portfolio", () => {
-  it("renders the gallery photos and filter categories under the default 'All' tab", () => {
-    render(<Portfolio profile={profile} gallery={sampleGallery} />);
-    expect(screen.getByText("All")).toBeInTheDocument();
+  it("renders the gallery photos and filter categories under the default 'Gallery' tab", () => {
+    render(<Portfolio projects={samplePortfolio} gallery={sampleGallery} />);
+    expect(screen.getByText("Gallery")).toBeInTheDocument();
     expect(screen.getByText("Data Analytics")).toBeInTheDocument();
     expect(screen.getByText("Machine Learning")).toBeInTheDocument();
     expect(document.querySelectorAll(".portfolio_list li")).toHaveLength(2);
@@ -17,7 +22,7 @@ describe("Portfolio", () => {
   });
 
   it("filters projects by category, replacing the gallery view", async () => {
-    render(<Portfolio profile={profile} gallery={sampleGallery} />);
+    render(<Portfolio projects={samplePortfolio} gallery={sampleGallery} />);
 
     // The filter click doesn't swap the grid instantly — it cross-fades over
     // 750ms, matching the original theme's Isotope-driven transition timing
@@ -30,7 +35,7 @@ describe("Portfolio", () => {
   });
 
   it("opens a detail modal with the project summary on click", async () => {
-    render(<Portfolio profile={profile} gallery={sampleGallery} />);
+    render(<Portfolio projects={samplePortfolio} gallery={sampleGallery} />);
     await userEvent.click(screen.getByText("Data Analytics"));
 
     const firstEntry = await waitFor(() => {
@@ -45,7 +50,7 @@ describe("Portfolio", () => {
   });
 
   it("opens a simple lightbox with just the name and image for a gallery photo", async () => {
-    render(<Portfolio profile={profile} gallery={sampleGallery} />);
+    render(<Portfolio projects={samplePortfolio} gallery={sampleGallery} />);
 
     const firstPhoto = document.querySelector('[data-title="Gallery Photo One"] a');
     await userEvent.click(firstPhoto);
@@ -57,5 +62,23 @@ describe("Portfolio", () => {
     expect(document.querySelector(".tokyo_tm_modalbox .top_image .main").style.backgroundImage).toContain(
       "/img/portfolio/1.jpg"
     );
+  });
+
+  it("shows only 6 gallery photos up front, revealing the rest on 'Load More'", async () => {
+    render(<Portfolio projects={samplePortfolio} gallery={manyPhotos} />);
+    expect(document.querySelectorAll(".portfolio_list li")).toHaveLength(6);
+
+    await userEvent.click(screen.getByText("Load More"));
+    expect(document.querySelectorAll(".portfolio_list li")).toHaveLength(10);
+    expect(screen.queryByText("Load More")).not.toBeInTheDocument();
+  });
+
+  it("never shows more than 30 gallery photos even with 'Load More'", async () => {
+    const tooMany = Array.from({ length: 40 }, (_, i) => ({ id: `t${i}`, name: `Photo ${i}`, image: "/img/x.jpg" }));
+    render(<Portfolio projects={samplePortfolio} gallery={tooMany} />);
+
+    await userEvent.click(screen.getByText("Load More"));
+    expect(document.querySelectorAll(".portfolio_list li")).toHaveLength(30);
+    expect(screen.queryByText("Load More")).not.toBeInTheDocument();
   });
 });

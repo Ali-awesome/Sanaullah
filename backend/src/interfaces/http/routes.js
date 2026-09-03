@@ -1,7 +1,33 @@
 import { Router } from "express";
+import multer from "multer";
 import { requireAdmin } from "./middleware/requireAdmin.js";
 
-export function buildRoutes({ profileController, contactController, blogController, galleryController }) {
+// Memory storage (not disk) — required for serverless: a function instance's
+// local disk doesn't persist between invocations, but req.file.buffer is
+// available immediately and can go straight into the repository (Mongo or
+// in-memory) without ever touching a filesystem.
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Wires up the standard list/create/reorder/update/delete routes shared by
+// every manually-orderable admin resource. The reorder route is registered
+// before the ":id" one — otherwise Express would match "reorder" itself as
+// the :id param and the reorder route would never be reached.
+function registerOrderedResourceRoutes(router, path, controller) {
+  router.get(path, controller.index);
+  router.post(path, requireAdmin, controller.create);
+  router.put(`${path}/reorder`, requireAdmin, controller.reorder);
+  router.put(`${path}/:id`, requireAdmin, controller.update);
+  router.delete(`${path}/:id`, requireAdmin, controller.remove);
+}
+
+export function buildRoutes({
+  profileController,
+  contactController,
+  blogController,
+  galleryController,
+  portfolioProjectController,
+  cvController,
+}) {
   const router = Router();
 
   router.get("/profile", profileController.show);
@@ -9,20 +35,17 @@ export function buildRoutes({ profileController, contactController, blogControll
   router.post("/contact", contactController.create);
   router.get("/contact", requireAdmin, contactController.index);
 
-  router.get("/posts", blogController.index);
-  router.post("/posts", requireAdmin, blogController.create);
-  // Must come before "/posts/:id" — otherwise Express would match
-  // "reorder" as the :id param and this route would never be reached.
-  router.put("/posts/reorder", requireAdmin, blogController.reorder);
-  router.put("/posts/:id", requireAdmin, blogController.update);
-  router.delete("/posts/:id", requireAdmin, blogController.remove);
+  registerOrderedResourceRoutes(router, "/posts", blogController);
+  registerOrderedResourceRoutes(router, "/gallery", galleryController);
+  registerOrderedResourceRoutes(router, "/portfolio-projects", portfolioProjectController);
 
-  router.get("/gallery", galleryController.index);
-  router.post("/gallery", requireAdmin, galleryController.create);
-  // Must come before "/gallery/:id" — same reason as "/posts/reorder" above.
-  router.put("/gallery/reorder", requireAdmin, galleryController.reorder);
-  router.put("/gallery/:id", requireAdmin, galleryController.update);
-  router.delete("/gallery/:id", requireAdmin, galleryController.remove);
+  // Public: the CV is meant to be downloadable by anyone, same as it always
+  // was as a static file — only *replacing* it is admin-gated. requireAdmin
+  // runs before multer parses the multipart body, so an unauthenticated
+  // request never gets its (potentially large) file buffered at all.
+  router.get("/cv/meta", cvController.showMeta);
+  router.get("/cv", cvController.show);
+  router.post("/cv", requireAdmin, upload.single("cv"), cvController.upload);
 
   return router;
 }

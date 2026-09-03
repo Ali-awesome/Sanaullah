@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { fetchProfile, fetchPosts, fetchGallery } from "./api/client.js";
+import { fetchProfile, postsClient, galleryClient, portfolioProjectsClient } from "./api/client.js";
 import Sidebar from "./components/Sidebar.jsx";
 import Preloader from "./components/Preloader.jsx";
+import LoadingSpinner from "./components/LoadingSpinner.jsx";
 import Cursor from "./components/Cursor.jsx";
 import Home from "./components/sections/Home.jsx";
 import About from "./components/sections/About.jsx";
@@ -30,6 +31,7 @@ function PortfolioApp() {
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [gallery, setGallery] = useState([]);
+  const [portfolioProjects, setPortfolioProjects] = useState([]);
   const [error, setError] = useState(null);
   const [active, setActiveRaw] = useState("home");
   // The original theme only plays the section-enter animation on a
@@ -62,35 +64,35 @@ function PortfolioApp() {
   }, [active, hasNavigated]);
 
   useEffect(() => {
-    Promise.all([fetchProfile(), fetchPosts(), fetchGallery()])
-      .then(([profileData, postsData, galleryData]) => {
+    Promise.all([fetchProfile(), postsClient.fetchAll(), galleryClient.fetchAll(), portfolioProjectsClient.fetchAll()])
+      .then(([profileData, postsData, galleryData, portfolioProjectsData]) => {
         setProfile(profileData);
         setPosts(postsData);
         setGallery(galleryData);
+        setPortfolioProjects(portfolioProjectsData);
       })
       .catch((err) => setError(err.message));
   }, []);
 
   if (error) {
     return (
-      <>
-        <Preloader />
-        <div className="min-h-screen bg-[#141414] p-10 text-white">
-          Could not reach the API. Please start the backend (see README).
-          <br />
-          <small>{error}</small>
-        </div>
-      </>
+      <div className="min-h-screen bg-[#141414] p-10 text-white">
+        Could not reach the API. Please start the backend (see README).
+        <br />
+        <small>{error}</small>
+      </div>
     );
   }
 
+  // Checks whether the data actually exists first (a centered spinner, not
+  // the intro curtain — there's nothing yet for the curtain to reveal).
+  // Only once the profile has actually loaded does the real curtain
+  // (Preloader) play, immediately followed by the real site — mounted
+  // exactly once, in the return below, so it never gets remounted/replayed
+  // by a later re-render the way it would if it were duplicated across
+  // multiple early-return branches like this one.
   if (!profile) {
-    return (
-      <>
-        <Preloader />
-        <div className="min-h-screen bg-[#141414] p-10 text-white">Loading…</div>
-      </>
-    );
+    return <LoadingSpinner />;
   }
 
   // Mirrors the original theme's three-state section system
@@ -126,7 +128,7 @@ function PortfolioApp() {
             <Service profile={profile} />
           </div>
           <div id="portfolio" className={sectionClass("portfolio")}>
-            <Portfolio profile={profile} gallery={gallery} />
+            <Portfolio projects={portfolioProjects} gallery={gallery} />
           </div>
           <div id="news" className={sectionClass("news")}>
             <Publications posts={posts} />

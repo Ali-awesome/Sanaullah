@@ -4,6 +4,8 @@ import { createApp } from "../src/app.js";
 import { InMemoryContactRepository } from "../src/infrastructure/repositories/InMemoryContactRepository.js";
 import { InMemoryBlogPostRepository } from "../src/infrastructure/repositories/InMemoryBlogPostRepository.js";
 import { InMemoryGalleryPhotoRepository } from "../src/infrastructure/repositories/InMemoryGalleryPhotoRepository.js";
+import { InMemoryPortfolioProjectRepository } from "../src/infrastructure/repositories/InMemoryPortfolioProjectRepository.js";
+import { InMemoryCvRepository } from "../src/infrastructure/repositories/InMemoryCvRepository.js";
 
 const ADMIN_TOKEN = "test-admin-token";
 process.env.ADMIN_TOKEN = ADMIN_TOKEN;
@@ -13,6 +15,8 @@ function buildApp() {
     contactRepository: new InMemoryContactRepository(),
     blogPostRepository: new InMemoryBlogPostRepository(),
     galleryPhotoRepository: new InMemoryGalleryPhotoRepository(),
+    portfolioProjectRepository: new InMemoryPortfolioProjectRepository(),
+    cvRepository: new InMemoryCvRepository(),
   });
 }
 
@@ -328,5 +332,169 @@ describe("DELETE /api/gallery/:id (admin only)", () => {
   it("returns 404 for a non-existent photo", async () => {
     const res = await request(buildApp()).delete("/api/gallery/does-not-exist").set("x-admin-token", ADMIN_TOKEN);
     expect(res.status).toBe(404);
+  });
+});
+
+describe("GET /api/portfolio-projects", () => {
+  it("returns the seeded projects publicly", async () => {
+    const res = await request(buildApp()).get("/api/portfolio-projects");
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe("POST /api/portfolio-projects (admin only)", () => {
+  it("rejects requests without the admin token", async () => {
+    const res = await request(buildApp())
+      .post("/api/portfolio-projects")
+      .send({ title: "New", category: "Research", summary: "Summary." });
+    expect(res.status).toBe(401);
+  });
+
+  it("creates a project when the admin token is supplied", async () => {
+    const app = buildApp();
+    const res = await request(app)
+      .post("/api/portfolio-projects")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ title: "New Project", category: "Research", summary: "A new project.", link: "https://example.com" });
+    expect(res.status).toBe(201);
+    expect(res.body.data.title).toBe("New Project");
+    expect(res.body.data.summary).toBe("A new project.");
+    expect(res.body.data.link).toBe("https://example.com");
+
+    const list = await request(app).get("/api/portfolio-projects");
+    const created = list.body.find((p) => p.title === "New Project");
+    expect(created).toBeTruthy();
+    expect(created.summary).toBe("A new project.");
+  });
+
+  it("rejects an invalid project even with a valid admin token", async () => {
+    const res = await request(buildApp())
+      .post("/api/portfolio-projects")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ title: "" });
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("PUT /api/portfolio-projects/reorder (admin only)", () => {
+  it("persists the new order and reflects it in subsequent GETs", async () => {
+    const app = buildApp();
+    const before = await request(app).get("/api/portfolio-projects");
+    const reversedIds = [...before.body].reverse().map((p) => p.id);
+
+    const res = await request(app)
+      .put("/api/portfolio-projects/reorder")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ ids: reversedIds });
+    expect(res.status).toBe(200);
+    expect(res.body.data.map((p) => p.id)).toEqual(reversedIds);
+
+    const after = await request(app).get("/api/portfolio-projects");
+    expect(after.body.map((p) => p.id)).toEqual(reversedIds);
+  });
+});
+
+describe("PUT /api/portfolio-projects/:id (admin only)", () => {
+  it("updates a project when the admin token is supplied", async () => {
+    const app = buildApp();
+    const created = await request(app)
+      .post("/api/portfolio-projects")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ title: "Original", category: "Research", summary: "Original summary." });
+
+    const res = await request(app)
+      .put(`/api/portfolio-projects/${created.body.data.id}`)
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ title: "Edited", category: "AI/ML", summary: "Edited summary." });
+    expect(res.status).toBe(200);
+    expect(res.body.data.title).toBe("Edited");
+  });
+
+  it("returns 404 for a non-existent project", async () => {
+    const res = await request(buildApp())
+      .put("/api/portfolio-projects/does-not-exist")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ title: "T", category: "Research", summary: "Summary." });
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("DELETE /api/portfolio-projects/:id (admin only)", () => {
+  it("deletes an existing project", async () => {
+    const app = buildApp();
+    const created = await request(app)
+      .post("/api/portfolio-projects")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .send({ title: "Temp", category: "Research", summary: "Temp project." });
+
+    const res = await request(app)
+      .delete(`/api/portfolio-projects/${created.body.data.id}`)
+      .set("x-admin-token", ADMIN_TOKEN);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it("returns 404 for a non-existent project", async () => {
+    const res = await request(buildApp())
+      .delete("/api/portfolio-projects/does-not-exist")
+      .set("x-admin-token", ADMIN_TOKEN);
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("GET /api/cv", () => {
+  it("streams the current CV as a PDF, publicly", async () => {
+    const res = await request(buildApp()).get("/api/cv");
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toBe("application/pdf");
+    expect(res.headers["content-disposition"]).toContain("attachment");
+  });
+});
+
+describe("GET /api/cv/meta", () => {
+  it("returns the current CV's filename/uploadedAt without the binary, publicly", async () => {
+    const res = await request(buildApp()).get("/api/cv/meta");
+    expect(res.status).toBe(200);
+    expect(res.body.filename).toBeTruthy();
+    expect(res.body.uploadedAt).toBeTruthy();
+  });
+});
+
+describe("POST /api/cv (admin only)", () => {
+  it("rejects requests without the admin token", async () => {
+    const res = await request(buildApp()).post("/api/cv").attach("cv", Buffer.from("%PDF-1.4"), "cv.pdf");
+    expect(res.status).toBe(401);
+  });
+
+  it("replaces the CV when the admin token is supplied", async () => {
+    const app = buildApp();
+    const res = await request(app)
+      .post("/api/cv")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .attach("cv", Buffer.from("%PDF-1.4 replacement"), { filename: "New_CV.pdf", contentType: "application/pdf" });
+    expect(res.status).toBe(201);
+    expect(res.body.data.filename).toBe("New_CV.pdf");
+
+    const get = await request(app).get("/api/cv").buffer(true).parse((res, cb) => {
+      const chunks = [];
+      res.on("data", (chunk) => chunks.push(chunk));
+      res.on("end", () => cb(null, Buffer.concat(chunks)));
+    });
+    expect(get.status).toBe(200);
+    expect(get.body.toString()).toContain("replacement");
+  });
+
+  it("rejects a non-PDF upload", async () => {
+    const res = await request(buildApp())
+      .post("/api/cv")
+      .set("x-admin-token", ADMIN_TOKEN)
+      .attach("cv", Buffer.from("not a pdf"), { filename: "not-a-cv.txt", contentType: "text/plain" });
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects a request with no file attached", async () => {
+    const res = await request(buildApp()).post("/api/cv").set("x-admin-token", ADMIN_TOKEN);
+    expect(res.status).toBe(400);
   });
 });

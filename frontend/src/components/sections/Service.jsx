@@ -12,17 +12,17 @@ export default function Service({ profile }) {
   return (
     <>
       <div className="container">
-        <div className="tokyo_tm_services float-left w-full py-[100px] max-lg:pt-[130px]">
+        <div className="tokyo_tm_services float-left w-full py-[100px] max-lg:pt-[130px] max-sm:pt-20">
           <div className="tokyo_tm_title">
             <div className="title_flex">
               <div className="left">
                 <span>Services</span>
-                <h1 className="text-[30px] font-bold">What I Do</h1>
+                <h1>What I Do</h1>
               </div>
             </div>
           </div>
           <div className="list float-left w-full">
-            <ul className="-ml-10 flex list-none flex-wrap">
+            <ul className="w-[calc(100%+2.5rem)] -ml-10 flex list-none flex-wrap max-sm:ml-0 max-sm:w-full">
               {profile.services.map((s, i) => (
                 <li key={s.number} className="mb-10 w-1/3 pl-10 max-md:w-1/2 max-sm:w-full max-sm:pl-0">
                   <div className="list_inner group flex h-full flex-col border border-black/10 bg-white px-[30px] pb-10 pt-[45px] transition-all duration-300 ease-in-out hover:border-black/20">
@@ -124,7 +124,7 @@ export default function Service({ profile }) {
             <h3 className="text-xl font-bold">Impact Highlights</h3>
           </div>
           <div className="list float-left w-full">
-            <ul className="-ml-10 list-none">
+            <ul className="-ml-10 list-none max-sm:ml-0">
               {profile.impactStats.map((stat) => (
                 <li key={stat.label} className="float-left mb-10 w-1/3 pl-10 max-sm:w-full max-sm:pl-0">
                   <div className="list_inner relative border border-black/10 px-5 py-10 text-center">

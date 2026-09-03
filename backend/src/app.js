@@ -14,22 +14,38 @@ import { CreateGalleryPhoto } from "./application/use-cases/CreateGalleryPhoto.j
 import { UpdateGalleryPhoto } from "./application/use-cases/UpdateGalleryPhoto.js";
 import { ReorderGalleryPhotos } from "./application/use-cases/ReorderGalleryPhotos.js";
 import { DeleteGalleryPhoto } from "./application/use-cases/DeleteGalleryPhoto.js";
+import { ListPortfolioProjects } from "./application/use-cases/ListPortfolioProjects.js";
+import { CreatePortfolioProject } from "./application/use-cases/CreatePortfolioProject.js";
+import { UpdatePortfolioProject } from "./application/use-cases/UpdatePortfolioProject.js";
+import { ReorderPortfolioProjects } from "./application/use-cases/ReorderPortfolioProjects.js";
+import { DeletePortfolioProject } from "./application/use-cases/DeletePortfolioProject.js";
+import { GetCv } from "./application/use-cases/GetCv.js";
+import { UploadCv } from "./application/use-cases/UploadCv.js";
 
 import { StaticProfileRepository } from "./infrastructure/repositories/StaticProfileRepository.js";
 import { makeProfileController } from "./interfaces/http/controllers/profileController.js";
 import { makeContactController } from "./interfaces/http/controllers/contactController.js";
 import { makeBlogController } from "./interfaces/http/controllers/blogController.js";
 import { makeGalleryController } from "./interfaces/http/controllers/galleryController.js";
+import { makePortfolioProjectController } from "./interfaces/http/controllers/portfolioProjectController.js";
+import { makeCvController } from "./interfaces/http/controllers/cvController.js";
 import { buildRoutes } from "./interfaces/http/routes.js";
 
 /**
  * Composition root: wires domain ports to infrastructure adapters and
- * builds the Express app. `contactRepository`, `blogPostRepository`, and
- * `galleryPhotoRepository` are injected by server.js (or by tests) once
- * it's known whether MongoDB is available — this is also what lets tests
- * run against fast in-memory repositories without touching a real database.
+ * builds the Express app. The five repositories are injected by server.js
+ * (or by tests) once it's known whether MongoDB is available — this is also
+ * what lets tests run against fast in-memory repositories without touching
+ * a real database.
  */
-export function createApp({ contactRepository, blogPostRepository, galleryPhotoRepository, clientOrigin }) {
+export function createApp({
+  contactRepository,
+  blogPostRepository,
+  galleryPhotoRepository,
+  portfolioProjectRepository,
+  cvRepository,
+  clientOrigin,
+}) {
   const app = express();
   app.use(cors({ origin: buildCorsOrigin(clientOrigin) }));
   app.use(express.json());
@@ -47,6 +63,13 @@ export function createApp({ contactRepository, blogPostRepository, galleryPhotoR
   const updateGalleryPhoto = new UpdateGalleryPhoto(galleryPhotoRepository);
   const reorderGalleryPhotos = new ReorderGalleryPhotos(galleryPhotoRepository);
   const deleteGalleryPhoto = new DeleteGalleryPhoto(galleryPhotoRepository);
+  const listPortfolioProjects = new ListPortfolioProjects(portfolioProjectRepository);
+  const createPortfolioProject = new CreatePortfolioProject(portfolioProjectRepository);
+  const updatePortfolioProject = new UpdatePortfolioProject(portfolioProjectRepository);
+  const reorderPortfolioProjects = new ReorderPortfolioProjects(portfolioProjectRepository);
+  const deletePortfolioProject = new DeletePortfolioProject(portfolioProjectRepository);
+  const getCv = new GetCv(cvRepository);
+  const uploadCv = new UploadCv(cvRepository);
 
   const profileController = makeProfileController(getProfile);
   const contactController = makeContactController({ submitContactMessage, listContactMessages });
@@ -64,9 +87,20 @@ export function createApp({ contactRepository, blogPostRepository, galleryPhotoR
     reorderGalleryPhotos,
     deleteGalleryPhoto,
   });
+  const portfolioProjectController = makePortfolioProjectController({
+    listPortfolioProjects,
+    createPortfolioProject,
+    updatePortfolioProject,
+    reorderPortfolioProjects,
+    deletePortfolioProject,
+  });
+  const cvController = makeCvController({ getCv, uploadCv });
 
   app.get("/health", (req, res) => res.json({ status: "ok" }));
-  app.use("/api", buildRoutes({ profileController, contactController, blogController, galleryController }));
+  app.use(
+    "/api",
+    buildRoutes({ profileController, contactController, blogController, galleryController, portfolioProjectController, cvController })
+  );
 
   return app;
 }

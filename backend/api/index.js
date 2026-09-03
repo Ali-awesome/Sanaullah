@@ -1,12 +1,6 @@
 import "dotenv/config";
 import { createApp } from "../src/app.js";
-import { tryConnectMongo } from "../src/infrastructure/db/connect.js";
-import { MongoContactRepository } from "../src/infrastructure/repositories/MongoContactRepository.js";
-import { InMemoryContactRepository } from "../src/infrastructure/repositories/InMemoryContactRepository.js";
-import { MongoBlogPostRepository } from "../src/infrastructure/repositories/MongoBlogPostRepository.js";
-import { InMemoryBlogPostRepository } from "../src/infrastructure/repositories/InMemoryBlogPostRepository.js";
-import { MongoGalleryPhotoRepository } from "../src/infrastructure/repositories/MongoGalleryPhotoRepository.js";
-import { InMemoryGalleryPhotoRepository } from "../src/infrastructure/repositories/InMemoryGalleryPhotoRepository.js";
+import { buildRepositories } from "../src/infrastructure/buildRepositories.js";
 
 /**
  * Vercel serverless entrypoint (see backend/vercel.json, which routes every
@@ -22,25 +16,11 @@ import { InMemoryGalleryPhotoRepository } from "../src/infrastructure/repositori
 let appPromise;
 
 async function buildApp() {
-  const connected = await tryConnectMongo(process.env.MONGODB_URI);
-  let contactRepository;
-  let blogPostRepository;
-  let galleryPhotoRepository;
-
-  if (connected) {
-    contactRepository = new MongoContactRepository();
-    blogPostRepository = new MongoBlogPostRepository();
-    await blogPostRepository.ensureSeeded();
-    galleryPhotoRepository = new MongoGalleryPhotoRepository();
-    await galleryPhotoRepository.ensureSeeded();
-  } else {
-    console.warn("[api] No MongoDB connection — using in-memory storage, which will NOT persist between invocations.");
-    contactRepository = new InMemoryContactRepository();
-    blogPostRepository = new InMemoryBlogPostRepository();
-    galleryPhotoRepository = new InMemoryGalleryPhotoRepository();
-  }
-
-  return createApp({ contactRepository, blogPostRepository, galleryPhotoRepository, clientOrigin: process.env.CLIENT_ORIGIN });
+  const repositories = await buildRepositories({
+    onFallback: () =>
+      console.warn("[api] No MongoDB connection — using in-memory storage, which will NOT persist between invocations."),
+  });
+  return createApp({ ...repositories, clientOrigin: process.env.CLIENT_ORIGIN });
 }
 
 export default async function handler(req, res) {

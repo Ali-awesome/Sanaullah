@@ -20,12 +20,20 @@ function shareLinks(title) {
   };
 }
 
-export default function Portfolio({ profile, gallery = [] }) {
-  const categories = useMemo(
-    () => ["All", ...new Set(profile.portfolio.map((p) => p.category))],
-    [profile.portfolio]
-  );
-  const [filter, setFilter] = useState("All");
+// The "All" tab is really the admin-managed photo gallery, not an
+// aggregate of every project category — named "Gallery" so it reads as
+// what it actually is instead of implying "every project everywhere".
+const GALLERY_TAB = "Gallery";
+// Shows this many gallery photos up front, with a "Load More" button
+// revealing the rest — up to this hard cap regardless of how many photos
+// actually exist, so a heavily-populated gallery can't make the tab itself
+// unreasonably heavy to load/scroll.
+const GALLERY_PAGE_SIZE = 6;
+const GALLERY_MAX = 30;
+
+export default function Portfolio({ projects = [], gallery = [] }) {
+  const categories = useMemo(() => [GALLERY_TAB, ...new Set(projects.map((p) => p.category))], [projects]);
+  const [filter, setFilter] = useState(GALLERY_TAB);
   // The original theme filters the grid via Isotope (tokyo_tm_portfolio() in
   // init.js), which runs a 750ms animated transition on every filter click —
   // not an instant swap. We don't pull in Isotope (a masonry layout engine)
@@ -34,7 +42,7 @@ export default function Portfolio({ profile, gallery = [] }) {
   // the original's separate "current"-class handler, while the actual
   // rendered items (`displayFilter`) cross-fade to the new set over the same
   // 750ms (375ms out, swap, 375ms back in) instead of snapping instantly.
-  const [displayFilter, setDisplayFilter] = useState("All");
+  const [displayFilter, setDisplayFilter] = useState(GALLERY_TAB);
   const fading = filter !== displayFilter;
 
   useEffect(() => {
@@ -42,6 +50,13 @@ export default function Portfolio({ profile, gallery = [] }) {
     const timer = setTimeout(() => setDisplayFilter(filter), 375);
     return () => clearTimeout(timer);
   }, [filter, displayFilter]);
+
+  const [visibleGalleryCount, setVisibleGalleryCount] = useState(GALLERY_PAGE_SIZE);
+  // Switching tabs and back to Gallery starts the pagination over, rather
+  // than remembering how far a previous visit had scrolled/expanded.
+  useEffect(() => {
+    setVisibleGalleryCount(GALLERY_PAGE_SIZE);
+  }, [displayFilter]);
 
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
@@ -52,11 +67,10 @@ export default function Portfolio({ profile, gallery = [] }) {
   const [displayedPhoto, photoOpen] = useModalTransition(selectedPhoto);
   const portalTarget = usePortalTarget();
 
-  // "All" is the photo gallery (admin-managed, via /api/gallery), not an
-  // aggregate of every category — each category tab still shows only its
-  // own portfolio projects.
-  const isGallery = displayFilter === "All";
-  const items = isGallery ? gallery : profile.portfolio.filter((p) => p.category === displayFilter);
+  const isGallery = displayFilter === GALLERY_TAB;
+  const cappedGallery = useMemo(() => gallery.slice(0, GALLERY_MAX), [gallery]);
+  const items = isGallery ? cappedGallery.slice(0, visibleGalleryCount) : projects.filter((p) => p.category === displayFilter);
+  const hasMoreGalleryItems = isGallery && visibleGalleryCount < cappedGallery.length;
 
   // Recreates tokyo_tm_projects() from the source init.js: a small label
   // that follows the cursor, showing the hovered item's name (plus category,
@@ -88,12 +102,12 @@ export default function Portfolio({ profile, gallery = [] }) {
   return (
     <>
       <div className="container">
-        <div className="tokyo_tm_portfolio float-left w-full pb-10 pt-[100px] max-lg:pt-[130px]">
+        <div className="tokyo_tm_portfolio float-left w-full pb-10 pt-[100px] max-lg:pt-[130px] max-sm:pt-20">
           <div className="tokyo_tm_title">
             <div className="title_flex">
               <div className="left">
                 <span>Portfolio</span>
-                <h1 className="text-[30px] font-bold">Featured Work</h1>
+                <h1>Featured Work</h1>
               </div>
               <div className="portfolio_filter max-md:pt-12">
                 <ul className="m-0 list-none">
@@ -120,7 +134,7 @@ export default function Portfolio({ profile, gallery = [] }) {
 
           <div className="list_wrapper float-left clear-both w-full">
             <ul
-              className={`portfolio_list -ml-10 flex list-none flex-wrap transition-opacity duration-[375ms] ${
+              className={`portfolio_list w-[calc(100%+2.5rem)] -ml-10 flex list-none flex-wrap max-sm:ml-0 max-sm:w-full transition-opacity duration-[375ms] ${
                 fading ? "opacity-0" : "opacity-100"
               }`}
             >
@@ -153,7 +167,7 @@ export default function Portfolio({ profile, gallery = [] }) {
                     </li>
                   ))
                 : items.map((item) => (
-                    <li key={item.slug} className="mb-10 w-1/3 pl-10 max-sm:w-full max-sm:pl-0">
+                    <li key={item.id} className="mb-10 w-1/3 pl-10 max-sm:w-full max-sm:pl-0">
                       <div className="inner group relative float-left clear-both w-full overflow-hidden">
                         <div
                           className="relative"
@@ -181,6 +195,17 @@ export default function Portfolio({ profile, gallery = [] }) {
                     </li>
                   ))}
             </ul>
+            {hasMoreGalleryItems && (
+              <div className="float-left w-full pt-5 text-center">
+                <button
+                  type="button"
+                  className="inline-block bg-black px-10 py-[9px] pb-[14px] text-white transition-colors duration-300 ease-in-out hover:bg-black/80"
+                  onClick={() => setVisibleGalleryCount(cappedGallery.length)}
+                >
+                  Load More
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -226,7 +251,7 @@ export default function Portfolio({ profile, gallery = [] }) {
               {displayedProject && (
                 <div className="description_wrap">
                   <div className="popup_details float-left clear-both w-full">
-                    <div className="top_image relative mb-[37px] overflow-hidden">
+                    <div className="top_image relative mb-[37px] h-[340px] overflow-hidden max-lg:h-[260px] max-sm:h-[180px]">
                       <img src="/img/thumbs/4-2.jpg" alt="" className="relative min-w-full opacity-0" />
                       <div
                         className="main absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -237,8 +262,8 @@ export default function Portfolio({ profile, gallery = [] }) {
                       <h3 className="text-[23px] font-bold max-sm:text-xl">{displayedProject.title}</h3>
                       <span>{displayedProject.category}</span>
                     </div>
-                    <div className="main_details mb-[90px] flex w-full clear-both max-lg:flex-col">
-                      <div className="textbox w-[70%] pr-10 max-lg:mb-[30px] max-lg:w-full max-lg:pr-0">
+                    <div className="main_details mb-[90px] flex w-full clear-both max-lg:mb-10 max-lg:flex-col">
+                      <div className="textbox w-[70%] pr-10 max-lg:mb-5 max-lg:w-full max-lg:pr-0">
                         <p className="mb-[18px] last:mb-0">{displayedProject.summary}</p>
                         {displayedProject.link && (
                           <p className="mb-[18px] last:mb-0">
@@ -249,21 +274,21 @@ export default function Portfolio({ profile, gallery = [] }) {
                         )}
                       </div>
                       <div className="detailbox w-[30%] pl-10 max-lg:w-full max-lg:pl-0">
-                        <ul className="m-0 list-none">
-                          <li className="float-left mb-2 w-full last:mb-0">
-                            <span className="first mb-[3px] block font-bold text-black">Client</span>
+                        <ul className="m-0 list-none max-lg:flex max-lg:flex-wrap max-lg:gap-x-6">
+                          <li className="float-left mb-2 w-full last:mb-0 max-lg:w-auto">
+                            <span className="first mb-[3px] block font-bold text-black max-lg:mb-0 max-lg:mr-1 max-lg:inline">Client:</span>
                             <span className="text-[#767676]">{displayedProject.client}</span>
                           </li>
-                          <li className="float-left mb-2 w-full last:mb-0">
-                            <span className="first mb-[3px] block font-bold text-black">Category</span>
+                          <li className="float-left mb-2 w-full last:mb-0 max-lg:w-auto">
+                            <span className="first mb-[3px] block font-bold text-black max-lg:mb-0 max-lg:mr-1 max-lg:inline">Category:</span>
                             <span className="text-[#767676]">{displayedProject.category}</span>
                           </li>
-                          <li className="float-left mb-2 w-full last:mb-0">
-                            <span className="first mb-[3px] block font-bold text-black">Date</span>
+                          <li className="float-left mb-2 w-full last:mb-0 max-lg:w-auto">
+                            <span className="first mb-[3px] block font-bold text-black max-lg:mb-0 max-lg:mr-1 max-lg:inline">Date:</span>
                             <span className="text-[#767676]">{displayedProject.date}</span>
                           </li>
-                          <li className="float-left mb-2 w-full last:mb-0">
-                            <span className="first mb-[3px] block font-bold text-black">Share</span>
+                          <li className="float-left mb-2 w-full last:mb-0 max-lg:w-auto">
+                            <span className="first mb-[3px] block font-bold text-black max-lg:mb-0 max-lg:mr-1 max-lg:inline">Share:</span>
                             <ul className="share relative top-[7px] m-0 list-none">
                               {(() => {
                                 const s = shareLinks(displayedProject.title);
@@ -346,7 +371,7 @@ export default function Portfolio({ profile, gallery = [] }) {
               {displayedPhoto && (
                 <div className="description_wrap">
                   <div className="popup_details float-left clear-both w-full">
-                    <div className="top_image relative mb-[37px] overflow-hidden">
+                    <div className="top_image relative mb-[37px] h-[340px] overflow-hidden max-lg:h-[260px] max-sm:h-[180px]">
                       <img src="/img/thumbs/4-2.jpg" alt="" className="relative min-w-full opacity-0" />
                       <div
                         className="main absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -356,6 +381,11 @@ export default function Portfolio({ profile, gallery = [] }) {
                     <div className="portfolio_main_title float-left w-full">
                       <h3 className="text-[23px] font-bold max-sm:text-xl">{displayedPhoto.name}</h3>
                     </div>
+                    {displayedPhoto.description && (
+                      <div className="descriptions float-left w-full">
+                        <p>{displayedPhoto.description}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

@@ -1,3 +1,5 @@
+import DownloadCvButton from "../DownloadCvButton.jsx";
+
 function ProgressBar({ label, value }) {
   return (
     <div className="progress_inner mb-[17px] w-full last:mb-0" data-value={value}>
@@ -44,17 +46,17 @@ export default function About({ profile }) {
   return (
     <>
       <div className="container">
-        <div className="tokyo_tm_about float-left w-full py-[100px] max-lg:pt-[130px]">
+        <div className="tokyo_tm_about float-left w-full py-[100px] max-lg:pt-[130px] max-sm:pt-20">
           <div className="tokyo_tm_title">
             <div className="title_flex">
               <div className="left">
                 <span>About</span>
-                <h1 className="text-[30px] font-bold">{about.heading}</h1>
+                <h1>{about.heading}</h1>
               </div>
             </div>
           </div>
           <div className="top_author_image relative mb-[35px] float-left w-full">
-            <img className="min-w-full" src={profile.avatarImage} alt={profile.name} />
+            <img className="min-w-full max-h-[650px] lg:pr-24" src={profile.avatarImage} alt={profile.name} />
           </div>
           <div className="about_title float-left mb-[27px] w-full border-b border-[#dfdfdf] pb-5">
             <h3 className="text-[22px] font-bold">{profile.name}</h3>
@@ -95,11 +97,7 @@ export default function About({ profile }) {
               </div>
             </div>
           </div>
-          <div className="tokyo_tm_button float-left w-full" data-position="left">
-            <a href={profile.cvUrl} download>
-              <span>Download CV</span>
-            </a>
-          </div>
+          <DownloadCvButton className="float-left w-full" />
         </div>
       </div>
 

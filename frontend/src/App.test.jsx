@@ -6,14 +6,17 @@ import { fullSampleProfile, samplePosts } from "./test/fixtures.js";
 
 vi.mock("./api/client.js", () => ({
   fetchProfile: vi.fn(),
-  fetchPosts: vi.fn(),
-  fetchGallery: vi.fn(),
+  postsClient: { fetchAll: vi.fn() },
+  galleryClient: { fetchAll: vi.fn() },
+  portfolioProjectsClient: { fetchAll: vi.fn() },
+  cvDownloadUrl: () => "/api/cv",
 }));
 
-import { fetchProfile, fetchPosts, fetchGallery } from "./api/client.js";
+import { fetchProfile, postsClient, galleryClient, portfolioProjectsClient } from "./api/client.js";
 fetchProfile.mockResolvedValue(fullSampleProfile);
-fetchPosts.mockResolvedValue(samplePosts);
-fetchGallery.mockResolvedValue([]);
+postsClient.fetchAll.mockResolvedValue(samplePosts);
+galleryClient.fetchAll.mockResolvedValue([]);
+portfolioProjectsClient.fetchAll.mockResolvedValue([]);
 
 describe("App section transitions", () => {
   it("does not play the entrance animation on the initial Home section", async () => {

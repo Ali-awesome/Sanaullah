@@ -12,19 +12,19 @@ export default function Publications({ posts }) {
   return (
     <>
       <div className="container">
-        <div className="tokyo_tm_news float-left w-full pb-[45px] pt-[100px] max-lg:pt-[130px]">
+        <div className="tokyo_tm_news float-left w-full pb-[45px] pt-[100px] max-lg:pt-[130px] max-sm:pt-20">
           <div className="tokyo_tm_title">
             <div className="title_flex">
               <div className="left">
                 <span>News</span>
-                <h1 className="text-[30px] font-bold">Publications &amp; Learning</h1>
+                <h1>Publications &amp; Learning</h1>
               </div>
             </div>
           </div>
 
           {!posts.length && <p className="text-[#767676]">No posts yet.</p>}
 
-          <ul className="-ml-[50px] flex list-none flex-wrap max-sm:ml-0">
+          <ul className="w-[calc(100%+50px)] -ml-[50px] flex list-none flex-wrap max-sm:ml-0 max-sm:w-full">
             {posts.map((pub) => (
               <li key={pub.id || pub.title} className="mb-[50px] flex w-1/2 pl-[50px] max-sm:w-full max-sm:pl-0">
                 <div className="list_inner group flex h-[540px] w-full flex-col shadow-[0_0_20px_rgba(0,0,0,0.07)] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_20px_rgba(0,0,0,0.12)]">
@@ -114,7 +114,7 @@ export default function Publications({ posts }) {
               {displayed && (
                 <div className="description_wrap">
                   <div className="service_popup_informations w-full">
-                    <div className="image relative z-[-1] float-left mb-10 w-full">
+                    <div className="image relative z-[-1] float-left mb-10 h-[340px] w-full max-lg:h-[260px] max-sm:h-[180px]">
                       <img src="/img/thumbs/4-2.jpg" alt="" className="min-w-full" />
                       <div
                         className="main absolute inset-0 bg-cover bg-center bg-no-repeat"

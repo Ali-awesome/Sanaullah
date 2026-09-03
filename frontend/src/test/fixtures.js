@@ -1,6 +1,6 @@
 export const samplePortfolio = [
   {
-    slug: "a",
+    id: "a",
     title: "Project A",
     category: "Data Analytics",
     date: "2026",
@@ -9,7 +9,7 @@ export const samplePortfolio = [
     summary: "Summary A.",
   },
   {
-    slug: "b",
+    id: "b",
     title: "Project B",
     category: "Machine Learning",
     date: "2026",
@@ -43,7 +43,6 @@ export const sampleProfile = {
   phone: "+8801000000000",
   linkedin: "https://linkedin.com/in/test",
   github: "https://github.com/test",
-  cvUrl: "/cv/test.pdf",
   contactMapQuery: "Dhaka, Bangladesh",
 };
 
@@ -69,5 +68,4 @@ export const fullSampleProfile = {
   experience: [{ period: "2024", place: "Test Co.", role: "Analyst" }],
   impactStats: [{ value: "10", label: "Things Tested" }],
   services: [{ number: "01", title: "Testing", text: "Short text.", details: "Full details." }],
-  portfolio: samplePortfolio,
 };

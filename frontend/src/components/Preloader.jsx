@@ -3,19 +3,17 @@ import { useEffect, useState } from "react";
 /**
  * Recreates the original theme's intro preloader: a full-screen curtain
  * with a growing/pulsing center line, matching its exact timing —
- * `preloaded` (curtain starts closing) at 1300ms, fully removed at 2500ms
- * — skipped on mobile, same as the source site (tokyo_tm_preloader() in
- * the original init.js).
+ * `preloaded` (curtain starts closing) at 1300ms, fully removed at 2500ms.
+ * The original theme (tokyo_tm_preloader() in its init.js) skipped this
+ * entirely on mobile user agents; this version plays the same curtain on
+ * every viewport/device, since the curtain itself is purely a centered,
+ * viewport-relative overlay with nothing in its CSS that assumes desktop
+ * width.
  */
 export default function Preloader() {
   const [phase, setPhase] = useState("loading");
 
   useEffect(() => {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
-    if (isMobile) {
-      setPhase("removed");
-      return;
-    }
     const t1 = setTimeout(() => setPhase("preloaded"), 1300);
     const t2 = setTimeout(() => setPhase("removed"), 2500);
     return () => {
