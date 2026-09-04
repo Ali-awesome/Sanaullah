@@ -34,13 +34,23 @@ export class MongoCvRepository extends ICvRepository {
     const count = await CvModel.countDocuments();
     if (count > 0) return;
     // Seeds the bundled default CV so "Download CV" always works even
-    // before an admin has ever uploaded a replacement.
-    const seed = new CvDocument({
-      buffer: readFileSync(DEFAULT_CV_PATH),
-      mimetype: "application/pdf",
-      filename: "Mohammad_Sanaullah_CV.pdf",
-    });
-    await CvModel.create({ _id: "current", ...seed });
+    // before an admin has ever uploaded a replacement. Must not throw:
+    // this runs during the shared, once-per-instance app setup (see
+    // api/index.js's cached `appPromise`), so an uncaught error here would
+    // take down every route, not just CV downloads. A serverless
+    // deployment's static-file bundling can fail to include this asset
+    // even when it works locally — degrade to "no CV yet" (cvController
+    // already returns 404 for that) rather than crash the whole API.
+    try {
+      const seed = new CvDocument({
+        buffer: readFileSync(DEFAULT_CV_PATH),
+        mimetype: "application/pdf",
+        filename: "Mohammad_Sanaullah_CV.pdf",
+      });
+      await CvModel.create({ _id: "current", ...seed });
+    } catch (err) {
+      console.warn(`[cv] Could not seed the bundled default CV (${err.message}). Starting with no CV until one is uploaded.`);
+    }
   }
 
   async get() {
