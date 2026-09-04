@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { fetchProfile, postsClient, galleryClient, portfolioProjectsClient } from "./api/client.js";
 import Sidebar from "./components/Sidebar.jsx";
 import Preloader from "./components/Preloader.jsx";
@@ -10,7 +10,11 @@ import Service from "./components/sections/Service.jsx";
 import Portfolio from "./components/sections/Portfolio.jsx";
 import Publications from "./components/sections/Publications.jsx";
 import Contact from "./components/sections/Contact.jsx";
-import AdminPanel from "./components/admin/AdminPanel.jsx";
+
+// Loaded on demand, not bundled with the public site: the admin panel pulls
+// in a rich text editor (Tiptap) that only the admin ever needs, and every
+// visitor to the actual portfolio would otherwise pay for downloading it.
+const AdminPanel = lazy(() => import("./components/admin/AdminPanel.jsx"));
 
 export const NAV_ITEMS = [
   { id: "home", label: "Home" },
@@ -24,7 +28,12 @@ export const NAV_ITEMS = [
 const isAdminRoute = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("admin");
 
 export default function App() {
-  return isAdminRoute ? <AdminPanel /> : <PortfolioApp />;
+  if (!isAdminRoute) return <PortfolioApp />;
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <AdminPanel />
+    </Suspense>
+  );
 }
 
 function PortfolioApp() {
@@ -116,8 +125,8 @@ function PortfolioApp() {
       <Preloader />
       <Sidebar profile={profile} active={active} onNavigate={setActive} />
 
-      <div className="rightpart relative float-left min-h-screen w-full bg-[#f8f8f8] pl-[450px] max-xl:pl-[350px] max-lg:pl-0">
-        <div className="rightpart_in relative float-left min-h-screen w-full clear-both border-l border-[#ebebeb] max-lg:border-l-0">
+      <div className="rightpart relative float-left min-h-screen w-full bg-[var(--bg-alt)] pl-[450px] max-xl:pl-[350px] max-lg:pl-0">
+        <div className="rightpart_in relative float-left min-h-screen w-full clear-both border-l border-[var(--border)] max-lg:border-l-0">
           <div id="home" className={sectionClass("home")}>
             <Home profile={profile} />
           </div>

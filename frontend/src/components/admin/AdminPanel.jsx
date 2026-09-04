@@ -9,6 +9,7 @@ import {
 } from "../../api/client.js";
 import { useOrderedAdminResource } from "../../hooks/useOrderedAdminResource.js";
 import AdminOrderedList from "./AdminOrderedList.jsx";
+import RichTextEditor from "./RichTextEditor.jsx";
 
 const TOKEN_KEY = "portfolio_admin_token";
 const BLANK_POST = { title: "", source: "", date: "", summary: "", image: "", link: "" };
@@ -178,12 +179,10 @@ export default function AdminPanel() {
               value={posts.form.link}
               onChange={(e) => posts.setForm({ ...posts.form, link: e.target.value })}
             />
-            <textarea
-              className={`${inputClass} min-h-[80px]`}
+            <RichTextEditor
               placeholder="Summary"
               value={posts.form.summary}
-              onChange={(e) => posts.setForm({ ...posts.form, summary: e.target.value })}
-              required
+              onChange={(html) => posts.setForm({ ...posts.form, summary: html })}
             />
             <div className="flex gap-[10px]">
               <button className={buttonClass} type="submit" disabled={posts.saving}>
@@ -241,11 +240,10 @@ export default function AdminPanel() {
               onChange={(e) => gallery.setForm({ ...gallery.form, image: e.target.value })}
               required
             />
-            <textarea
-              className={`${inputClass} min-h-[60px]`}
+            <RichTextEditor
               placeholder="Description (optional) — shown when a visitor opens the photo"
               value={gallery.form.description}
-              onChange={(e) => gallery.setForm({ ...gallery.form, description: e.target.value })}
+              onChange={(html) => gallery.setForm({ ...gallery.form, description: html })}
             />
             <div className="flex gap-[10px]">
               <button className={buttonClass} type="submit" disabled={gallery.saving}>
@@ -332,12 +330,10 @@ export default function AdminPanel() {
               value={portfolioProjects.form.link}
               onChange={(e) => portfolioProjects.setForm({ ...portfolioProjects.form, link: e.target.value })}
             />
-            <textarea
-              className={`${inputClass} min-h-[80px]`}
+            <RichTextEditor
               placeholder="Summary"
               value={portfolioProjects.form.summary}
-              onChange={(e) => portfolioProjects.setForm({ ...portfolioProjects.form, summary: e.target.value })}
-              required
+              onChange={(html) => portfolioProjects.setForm({ ...portfolioProjects.form, summary: html })}
             />
             <div className="flex gap-[10px]">
               <button className={buttonClass} type="submit" disabled={portfolioProjects.saving}>

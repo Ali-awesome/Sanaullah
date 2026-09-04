@@ -23,6 +23,48 @@
   --animate-morph: morph 8s ease-in-out infinite 1s;
 }
 
+/*
+ * Theme tokens for the light/dark toggle (ThemeToggle.jsx sets
+ * `data-theme` on <html> and persists the choice to localStorage; see that
+ * file for the full explanation, including why it defaults to light rather
+ * than following system preference). Plain custom properties rather than
+ * `@theme` color entries: every consuming utility below is a `bg-[var(--x)]`/
+ * `text-[var(--x)]`/`border-[var(--x)]` arbitrary value, which just emits
+ * `background-color: var(--x)` etc. directly — no dependency on exactly how
+ * Tailwind v4 resolves `@theme` colors at runtime, so redefining these under
+ * `[data-theme="dark"]` is guaranteed to work.
+ *
+ * Deliberately NOT touched by any of this: the admin panel (an internal
+ * tool, not the public-facing "theme") and the Preloader/LoadingSpinner
+ * curtain (intentionally always-black chrome, not page content).
+ */
+:root {
+  --bg: #ffffff;
+  --bg-alt: #f8f8f8;
+  --bg-inverse: #000000;
+  --surface: #ffffff;
+  --fg: #000000;
+  --fg-inverse: #ffffff;
+  --fg-muted: #767676;
+  --fg-faint: #999999;
+  --border: #eeeeee;
+  --border-strong: #dddddd;
+  --danger: #c0392b;
+}
+:root[data-theme="dark"] {
+  --bg: #121212;
+  --bg-alt: #191919;
+  --bg-inverse: #f5f5f5;
+  --surface: #1e1e1e;
+  --fg: #f5f5f5;
+  --fg-inverse: #121212;
+  --fg-muted: #a3a3a3;
+  --fg-faint: #7a7a7a;
+  --border: #2a2a2a;
+  --border-strong: #3a3a3a;
+  --danger: #ff6b5b;
+}
+
 /* A common desktop/laptop shape the width-based breakpoints above don't
    catch at all: plenty wide (>1200px, so still gets the desktop modal
    layout) but short in *height* (a 13"-14" laptop's actual resolution,
@@ -57,7 +99,7 @@
     overflow-x: hidden;
   }
   body {
-    @apply font-sans text-[15px] leading-[30px] text-[#767676];
+    @apply bg-[var(--bg)] font-sans text-[15px] leading-[30px] text-[var(--fg-muted)] transition-colors duration-300 ease-in-out;
   }
   body::-webkit-scrollbar {
     width: 0px;
@@ -68,13 +110,13 @@
   h4,
   h5,
   h6 {
-    @apply font-heading font-medium leading-[1.4] text-black;
+    @apply font-heading font-medium leading-[1.4] text-[var(--fg)];
   }
   a {
     @apply no-underline;
   }
   ::placeholder {
-    color: #6f6f6f;
+    color: var(--fg-muted);
   }
   svg {
     fill: currentcolor;
@@ -120,13 +162,13 @@
     @apply text-[30px] font-bold;
   }
   .tokyo_tm_title span {
-    @apply mb-[11px] inline-block bg-black/4 px-[10px] py-1 font-heading text-xs font-semibold uppercase text-[#333];
+    @apply mb-[11px] inline-block bg-[var(--fg)]/[0.06] px-[10px] py-1 font-heading text-xs font-semibold uppercase text-[var(--fg)];
   }
   .tokyo_tm_title .title_flex {
     @apply flex w-full clear-both items-end justify-between max-md:flex-col max-md:items-start;
   }
   .tokyo_tm_button a {
-    @apply inline-block bg-black px-10 py-[9px] pb-[14px] text-white transition-colors duration-300 ease-in-out;
+    @apply inline-block bg-[var(--bg-inverse)] px-10 py-[9px] pb-[14px] text-[var(--fg-inverse)] transition-colors duration-300 ease-in-out;
   }
 
   /* ---- "Read more" link: theme's underline-draw hover animation ---- */
@@ -134,11 +176,11 @@
     @apply relative float-left clear-both w-full overflow-hidden;
   }
   .tokyo_tm_read_more a {
-    @apply relative inline-block overflow-hidden pr-8 font-heading text-xs font-medium uppercase text-black;
+    @apply relative inline-block overflow-hidden pr-8 font-heading text-xs font-medium uppercase text-[var(--fg)];
   }
   .tokyo_tm_read_more a::before {
     content: "";
-    @apply absolute inset-x-0 top-0 bottom-0 m-auto h-px w-full origin-left scale-x-[0.2] bg-black;
+    @apply absolute inset-x-0 top-0 bottom-0 m-auto h-px w-full origin-left scale-x-[0.2] bg-[var(--fg)];
     animation: read-more-out 0.4s cubic-bezier(0.6, 0.01, 0, 1) forwards;
   }
   /* The original theme's own CSS keeps this span translated off-screen at
@@ -149,7 +191,7 @@
      decorative flourish, not the only way to discover the link) still
      animates on hover. */
   .tokyo_tm_read_more a span {
-    @apply relative z-10 inline-block bg-white;
+    @apply relative z-10 inline-block bg-[var(--surface)];
   }
   .group:hover .tokyo_tm_read_more a::before {
     animation: read-more-in 0.4s cubic-bezier(0.6, 0.01, 0, 1) forwards;
@@ -281,13 +323,13 @@
     transform: translateZ(0);
   }
   .cursor-inner {
-    @apply z-50 -ml-[3px] -mt-[3px] h-[6px] w-[6px] bg-black transition-[width,height,margin,opacity] duration-300 ease-in-out;
+    @apply z-50 -ml-[3px] -mt-[3px] h-[6px] w-[6px] bg-[var(--fg)] transition-[width,height,margin,opacity] duration-300 ease-in-out;
   }
   .cursor-inner.cursor-hover {
-    @apply -ml-10 -mt-10 h-20 w-20 bg-black opacity-30;
+    @apply -ml-10 -mt-10 h-20 w-20 bg-[var(--fg)] opacity-30;
   }
   .cursor-outer {
-    @apply z-50 -ml-[15px] -mt-[15px] h-[30px] w-[30px] border-2 border-black opacity-50 transition-all duration-[80ms] ease-out;
+    @apply z-50 -ml-[15px] -mt-[15px] h-[30px] w-[30px] border-2 border-[var(--fg)] opacity-50 transition-all duration-[80ms] ease-out;
   }
   .cursor-outer.cursor-hover {
     @apply opacity-0;
@@ -302,12 +344,12 @@
     @apply relative inline-block h-6 w-10;
   }
   .hamburger-inner {
-    @apply absolute top-1/2 -mt-0.5 block h-1 w-10 rounded bg-black transition-transform duration-150 ease-in-out;
+    @apply absolute top-1/2 -mt-0.5 block h-1 w-10 rounded bg-[var(--fg)] transition-transform duration-150 ease-in-out;
   }
   .hamburger-inner::before,
   .hamburger-inner::after {
     content: "";
-    @apply absolute block h-1 w-10 rounded bg-black transition-transform duration-150 ease-in-out;
+    @apply absolute block h-1 w-10 rounded bg-[var(--fg)] transition-transform duration-150 ease-in-out;
   }
   .hamburger-inner::before {
     top: -10px;
@@ -349,7 +391,7 @@
   }
 
   .tokyo_tm_mobile_menu {
-    @apply fixed top-[50px] right-[-200px] z-[15] h-screen w-[200px] bg-white transition-all duration-300 ease-in-out;
+    @apply fixed top-[50px] right-[-200px] z-[15] h-screen w-[200px] bg-[var(--bg)] transition-all duration-300 ease-in-out;
   }
   .tokyo_tm_mobile_menu.opened {
     @apply right-0;
@@ -357,13 +399,13 @@
 
   /* ---- portfolio hover tooltip (Portfolio.jsx) ---- */
   .tokyo_tm_portfolio_titles {
-    @apply invisible fixed z-[15] whitespace-nowrap bg-white px-[15px] py-[5px] font-heading text-lg font-semibold text-black opacity-0;
+    @apply invisible fixed z-[15] whitespace-nowrap bg-[var(--surface)] px-[15px] py-[5px] font-heading text-lg font-semibold text-[var(--fg)] opacity-0;
   }
   .tokyo_tm_portfolio_titles.visible {
     @apply visible opacity-100;
   }
   .tokyo_tm_portfolio_titles .work__cat {
-    @apply absolute left-0 top-full -mt-[10px] bg-white px-[15px] py-[5px] font-sans text-[15px] font-medium text-[#767676];
+    @apply absolute left-0 top-full -mt-[10px] bg-[var(--surface)] px-[15px] py-[5px] font-sans text-[15px] font-medium text-[var(--fg-muted)];
   }
 
   /* ---- shared lightbox/detail modal (Service/Portfolio x2/Publications) ---- */
@@ -381,7 +423,7 @@
      actual height is available to the popup's own content, reducing how
      often — and how much — description_wrap below needs to scroll. */
   .tokyo_tm_modalbox .box_inner {
-    @apply invisible absolute left-1/2 top-[70px] bottom-[70px] z-[1] mt-[-20px] w-[968px] max-lg:top-10 max-lg:bottom-10 max-lg:w-[500px] max-sm:top-5 max-sm:bottom-5 max-sm:w-[300px] short:top-5 short:bottom-5 -translate-x-1/2 bg-white opacity-0 transition-all duration-300 ease-in-out;
+    @apply invisible absolute left-1/2 top-[70px] bottom-[70px] z-[1] mt-[-20px] w-[968px] max-lg:top-10 max-lg:bottom-10 max-lg:w-[500px] max-sm:top-5 max-sm:bottom-5 max-sm:w-[300px] short:top-5 short:bottom-5 -translate-x-1/2 bg-[var(--surface)] opacity-0 transition-all duration-300 ease-in-out;
     transition-delay: 0.3s;
   }
   .tokyo_tm_modalbox.opened .box_inner {
@@ -404,20 +446,20 @@
      image below keeps a normal, good-looking size instead of fighting for
      zero overflow. */
   .tokyo_tm_modalbox .description_wrap {
-    @apply relative float-left h-full w-full overflow-hidden overflow-y-scroll p-[50px] pb-24 max-lg:p-10 max-lg:pb-16 max-sm:p-5 max-sm:pb-10;
+    @apply relative float-left h-full w-full overflow-hidden overflow-y-scroll p-[50px] pb-24 text-[var(--fg-muted)] max-lg:p-10 max-lg:pb-16 max-sm:p-5 max-sm:pb-10;
     scrollbar-width: thin;
-    scrollbar-color: #999 #fff;
+    scrollbar-color: var(--fg-faint) var(--surface);
   }
   .tokyo_tm_modalbox .description_wrap::-webkit-scrollbar {
     width: 11px;
   }
   .tokyo_tm_modalbox .description_wrap::-webkit-scrollbar-thumb {
-    @apply rounded-md border-[3px] border-white bg-[#999];
+    @apply rounded-md border-[3px] border-[var(--surface)] bg-[var(--fg-faint)];
   }
   .tokyo_tm_modalbox .description_wrap::before,
   .tokyo_tm_modalbox .description_wrap::after {
     content: "";
-    @apply fixed inset-x-0 z-[3] h-[50px] bg-white max-lg:h-10 max-sm:h-5;
+    @apply fixed inset-x-0 z-[3] h-[50px] bg-[var(--surface)] max-lg:h-10 max-sm:h-5;
   }
   .tokyo_tm_modalbox .description_wrap::before {
     @apply top-0;
@@ -427,5 +469,51 @@
   }
   body.modal {
     @apply overflow-y-hidden;
+  }
+
+  /* ---- rich text content (RichTextEditor.jsx while typing, RichText.jsx
+     when rendered on the public site) — restores the list/quote/link
+     styling Tailwind's preflight reset strips by default, so both look
+     identical. Defined here with plain, always-light colors (the admin
+     panel — where RichTextEditor lives — deliberately isn't themed, see
+     ThemeToggle.jsx), then overridden below for the public site's own
+     copy specifically, which does need to follow the toggle. ---- */
+  .rich_text_content p {
+    @apply mb-[10px] last:mb-0;
+  }
+  .rich_text_content ul,
+  .rich_text_content ol {
+    @apply mb-[10px] pl-6 last:mb-0;
+  }
+  .rich_text_content ul {
+    @apply list-disc;
+  }
+  .rich_text_content ol {
+    @apply list-decimal;
+  }
+  .rich_text_content blockquote {
+    @apply mb-[10px] border-l-[3px] border-[#ddd] pl-3 italic text-[#767676] last:mb-0;
+  }
+  .rich_text_content code {
+    @apply rounded bg-[#f2f2f2] px-1 py-[1px] font-mono text-[0.9em];
+  }
+  .rich_text_content a {
+    @apply text-black underline;
+  }
+  .rich_text_content p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    @apply pointer-events-none float-left h-0 text-[#999];
+  }
+  /* Public-site override (RichText.jsx always renders within
+     .tokyo_tm_all_wrap; the admin's RichTextEditor never does) — same
+     rules, theme-aware colors. */
+  .tokyo_tm_all_wrap .rich_text_content blockquote {
+    @apply border-[var(--border-strong)] text-[var(--fg-muted)];
+  }
+  .tokyo_tm_all_wrap .rich_text_content code {
+    @apply bg-[var(--fg)]/[0.08];
+  }
+  .tokyo_tm_all_wrap .rich_text_content a {
+    @apply text-[var(--fg)];
   }
 }

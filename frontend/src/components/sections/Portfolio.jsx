@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { FaTimes, FaFacebookSquare, FaTwitterSquare, FaLinkedin } from "react-icons/fa";
 import { useModalTransition } from "../../hooks/useModalTransition.js";
 import { usePortalTarget } from "../../hooks/usePortalTarget.js";
+import RichText from "../RichText.jsx";
 
 // Real share-intent links for the "Share" row in the Detail popup (the
 // original theme's own icons are inert placeholders — href="#" — since a
@@ -116,7 +117,7 @@ export default function Portfolio({ projects = [], gallery = [] }) {
                       <a
                         href="#"
                         className={`inline-block font-heading font-medium transition-colors duration-300 ease-in-out ${
-                          filter === c ? "text-black" : "text-[#767676] hover:text-black"
+                          filter === c ? "text-[var(--fg)]" : "text-[var(--fg-muted)] hover:text-[var(--fg)]"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -204,7 +205,7 @@ export default function Portfolio({ projects = [], gallery = [] }) {
               <div className="float-left w-full pt-5 text-center">
                 <button
                   type="button"
-                  className="inline-block bg-black px-10 py-[9px] pb-[14px] text-white transition-colors duration-300 ease-in-out hover:bg-black/80"
+                  className="inline-block bg-[var(--bg-inverse)] px-10 py-[9px] pb-[14px] text-[var(--fg-inverse)] transition-colors duration-300 ease-in-out hover:opacity-80"
                   onClick={() => setVisibleGalleryCount(cappedGallery.length)}
                 >
                   Load More
@@ -274,7 +275,7 @@ export default function Portfolio({ projects = [], gallery = [] }) {
                     </div>
                     <div className="main_details mb-[90px] flex w-full clear-both max-lg:mb-10 max-lg:flex-col">
                       <div className="textbox w-[70%] pr-10 max-lg:mb-5 max-lg:w-full max-lg:pr-0">
-                        <p className="mb-[18px] last:mb-0">{displayedProject.summary}</p>
+                        <RichText html={displayedProject.summary} className="mb-[18px] last:mb-0" />
                         {displayedProject.link && (
                           <p className="mb-[18px] last:mb-0">
                             <a href={displayedProject.link} target="_blank" rel="noreferrer">
@@ -286,36 +287,36 @@ export default function Portfolio({ projects = [], gallery = [] }) {
                       <div className="detailbox w-[30%] pl-10 max-lg:w-full max-lg:pl-0">
                         <ul className="m-0 list-none max-lg:flex max-lg:flex-wrap max-lg:gap-x-6">
                           <li className="float-left mb-2 w-full last:mb-0 max-lg:w-auto">
-                            <span className="first mb-[3px] block font-bold text-black max-lg:mb-0 max-lg:mr-1 max-lg:inline">Client:</span>
-                            <span className="text-[#767676]">{displayedProject.client}</span>
+                            <span className="first mb-[3px] block font-bold text-[var(--fg)] max-lg:mb-0 max-lg:mr-1 max-lg:inline">Client:</span>
+                            <span className="text-[var(--fg-muted)]">{displayedProject.client}</span>
                           </li>
                           <li className="float-left mb-2 w-full last:mb-0 max-lg:w-auto">
-                            <span className="first mb-[3px] block font-bold text-black max-lg:mb-0 max-lg:mr-1 max-lg:inline">Category:</span>
-                            <span className="text-[#767676]">{displayedProject.category}</span>
+                            <span className="first mb-[3px] block font-bold text-[var(--fg)] max-lg:mb-0 max-lg:mr-1 max-lg:inline">Category:</span>
+                            <span className="text-[var(--fg-muted)]">{displayedProject.category}</span>
                           </li>
                           <li className="float-left mb-2 w-full last:mb-0 max-lg:w-auto">
-                            <span className="first mb-[3px] block font-bold text-black max-lg:mb-0 max-lg:mr-1 max-lg:inline">Date:</span>
-                            <span className="text-[#767676]">{displayedProject.date}</span>
+                            <span className="first mb-[3px] block font-bold text-[var(--fg)] max-lg:mb-0 max-lg:mr-1 max-lg:inline">Date:</span>
+                            <span className="text-[var(--fg-muted)]">{displayedProject.date}</span>
                           </li>
                           <li className="float-left mb-2 w-full last:mb-0 max-lg:w-auto">
-                            <span className="first mb-[3px] block font-bold text-black max-lg:mb-0 max-lg:mr-1 max-lg:inline">Share:</span>
+                            <span className="first mb-[3px] block font-bold text-[var(--fg)] max-lg:mb-0 max-lg:mr-1 max-lg:inline">Share:</span>
                             <ul className="share relative top-[7px] m-0 list-none">
                               {(() => {
                                 const s = shareLinks(displayedProject.title);
                                 return (
                                   <>
                                     <li className="mr-[5px] inline-block last:mr-0">
-                                      <a href={s.facebook} target="_blank" rel="noreferrer" aria-label="Share on Facebook" className="text-lg text-black">
+                                      <a href={s.facebook} target="_blank" rel="noreferrer" aria-label="Share on Facebook" className="text-lg text-[var(--fg)]">
                                         <FaFacebookSquare />
                                       </a>
                                     </li>
                                     <li className="mr-[5px] inline-block last:mr-0">
-                                      <a href={s.twitter} target="_blank" rel="noreferrer" aria-label="Share on X" className="text-lg text-black">
+                                      <a href={s.twitter} target="_blank" rel="noreferrer" aria-label="Share on X" className="text-lg text-[var(--fg)]">
                                         <FaTwitterSquare />
                                       </a>
                                     </li>
                                     <li className="mr-[5px] inline-block last:mr-0">
-                                      <a href={s.linkedin} target="_blank" rel="noreferrer" aria-label="Share on LinkedIn" className="text-lg text-black">
+                                      <a href={s.linkedin} target="_blank" rel="noreferrer" aria-label="Share on LinkedIn" className="text-lg text-[var(--fg)]">
                                         <FaLinkedin />
                                       </a>
                                     </li>
@@ -393,7 +394,7 @@ export default function Portfolio({ projects = [], gallery = [] }) {
                     </div>
                     {displayedPhoto.description && (
                       <div className="descriptions float-left w-full">
-                        <p>{displayedPhoto.description}</p>
+                        <RichText html={displayedPhoto.description} />
                       </div>
                     )}
                   </div>

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { FaTimes } from "react-icons/fa";
 import { useModalTransition } from "../../hooks/useModalTransition.js";
 import { usePortalTarget } from "../../hooks/usePortalTarget.js";
+import RichText from "../RichText.jsx";
 
 export default function Publications({ posts }) {
   const [selected, setSelected] = useState(null);
@@ -22,7 +23,7 @@ export default function Publications({ posts }) {
             </div>
           </div>
 
-          {!posts.length && <p className="text-[#767676]">No posts yet.</p>}
+          {!posts.length && <p className="text-[var(--fg-muted)]">No posts yet.</p>}
 
           <ul className="w-[calc(100%+50px)] -ml-[50px] flex list-none flex-wrap max-sm:ml-0 max-sm:w-full">
             {posts.map((pub) => (
@@ -43,10 +44,10 @@ export default function Publications({ posts }) {
                       }}
                     ></a>
                   </div>
-                  <div className="details flex w-full flex-1 flex-col bg-white px-10 pb-[25px] pt-[30px]">
-                    <div className="extra relative mb-[25px] flex items-center justify-between after:absolute after:bottom-[-7px] after:h-px after:w-full after:bg-black/10 after:content-['']">
+                  <div className="details flex w-full flex-1 flex-col bg-[var(--surface)] px-10 pb-[25px] pt-[30px]">
+                    <div className="extra relative mb-[25px] flex items-center justify-between after:absolute after:bottom-[-7px] after:h-px after:w-full after:bg-[var(--fg)]/10 after:content-['']">
                       <div className="short">
-                        <p className="date overflow-hidden whitespace-nowrap text-ellipsis font-heading text-[13px] text-[#767676]">
+                        <p className="date overflow-hidden whitespace-nowrap text-ellipsis font-heading text-[13px] text-[var(--fg-muted)]">
                           {pub.source}
                           {pub.date && (
                             <span className="relative before:relative before:mr-[5px] before:pl-[2px] before:text-[10px] before:content-['/']">
@@ -60,7 +61,7 @@ export default function Publications({ posts }) {
                     <h3 className="publication_title title mb-[10px] line-clamp-2 min-h-[2.6em] text-lg font-semibold leading-[1.4]">
                       <a
                         href="#"
-                        className="inline-block text-black transition-colors duration-300 ease-in-out"
+                        className="inline-block text-[var(--fg)] transition-colors duration-300 ease-in-out"
                         onClick={(e) => {
                           e.preventDefault();
                           setSelected(pub);
@@ -121,11 +122,11 @@ export default function Publications({ posts }) {
                       <h3 className="text-[23px] font-semibold">{displayed.title}</h3>
                     </div>
                     <div className="descriptions float-left w-full">
-                      <p className="date mb-[15px] text-[#767676]">
+                      <p className="date mb-[15px] text-[var(--fg-muted)]">
                         {displayed.source}
                         {displayed.date ? ` — ${displayed.date}` : ""}
                       </p>
-                      <p className="mb-[15px] last:mb-0">{displayed.summary}</p>
+                      <RichText html={displayed.summary} className="mb-[15px] last:mb-0" />
                       {displayed.link && (
                         <p className="mb-[15px] last:mb-0">
                           <a href={displayed.link} target="_blank" rel="noreferrer">

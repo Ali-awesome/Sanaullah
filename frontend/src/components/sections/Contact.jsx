@@ -2,7 +2,7 @@ import { useId, useState } from "react";
 import { submitContact } from "../../api/client.js";
 
 const inputClass =
-  "h-11 w-full border border-black/20 bg-transparent px-[10px] font-heading text-[15px] leading-[1.6] transition-all duration-300 ease-in-out focus:border-black/50 focus:bg-[#eee] focus:outline-none";
+  "h-11 w-full border border-[var(--fg)]/20 bg-transparent px-[10px] font-heading text-[15px] leading-[1.6] transition-all duration-300 ease-in-out focus:border-[var(--fg)]/50 focus:bg-[var(--fg)]/[0.06] focus:outline-none";
 
 export default function Contact({ profile }) {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -99,7 +99,7 @@ export default function Contact({ profile }) {
               <textarea
                 id={messageId}
                 placeholder="Message"
-                className="mb-5 h-[120px] w-full resize-none border border-black/20 bg-transparent p-[10px] font-heading text-[15px] leading-[1.4] transition-all duration-300 ease-in-out focus:border-black/50 focus:bg-[#eee] focus:outline-none"
+                className="mb-5 h-[120px] w-full resize-none border border-[var(--fg)]/20 bg-transparent p-[10px] font-heading text-[15px] leading-[1.4] transition-all duration-300 ease-in-out focus:border-[var(--fg)]/50 focus:bg-[var(--fg)]/[0.06] focus:outline-none"
                 value={form.message}
                 onChange={update("message")}
               ></textarea>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NAV_ITEMS } from "../App.jsx";
+import ThemeToggle from "./ThemeToggle.jsx";
 
 export default function Sidebar({ profile, active, onNavigate }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -24,7 +25,9 @@ export default function Sidebar({ profile, active, onNavigate }) {
         <li key={item.id} className={`${liClassName} ${isActive ? "active" : ""}`}>
           <a
             href={`#${item.id}`}
-            className={`${linkClassName} ${isActive ? "text-black" : "text-[#767676] hover:text-black"}`}
+            className={`${linkClassName} ${
+              isActive ? "text-[var(--fg)]" : "text-[var(--fg-muted)] hover:text-[var(--fg)]"
+            }`}
             onClick={(e) => {
               e.preventDefault();
               go(item.id);
@@ -39,7 +42,7 @@ export default function Sidebar({ profile, active, onNavigate }) {
   return (
     <>
       {/* MOBILE TOPBAR */}
-      <div className="tokyo_tm_topbar fixed inset-x-0 top-0 z-[14] hidden h-[50px] bg-white max-lg:block">
+      <div className="tokyo_tm_topbar fixed inset-x-0 top-0 z-[14] hidden h-[50px] bg-[var(--bg)] max-lg:block">
         <div className="topbar_inner flex h-full w-full items-center justify-between px-5">
           <div className="logo">
             <a
@@ -49,21 +52,26 @@ export default function Sidebar({ profile, active, onNavigate }) {
                 go("home");
               }}
             >
-              <h3 className="font-poppins text-[25px] font-black tracking-[4px]">{profile.name.split(" ")[0]}</h3>
+              <h3 className="font-poppins text-[25px] font-black tracking-[4px] text-[var(--fg)]">
+                {profile.name.split(" ")[0]}
+              </h3>
             </a>
           </div>
-          <div
-            className="trigger relative top-[5px] cursor-pointer"
-            role="button"
-            tabIndex={0}
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={menuOpen}
-            onClick={toggleMenu}
-            onKeyDown={onTriggerKeyDown}
-          >
-            <div className={`hamburger hamburger--slider${menuOpen ? " is-active" : ""}`}>
-              <div className="hamburger-box">
-                <div className="hamburger-inner"></div>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <div
+              className="trigger relative top-[5px] cursor-pointer"
+              role="button"
+              tabIndex={0}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
+              onClick={toggleMenu}
+              onKeyDown={onTriggerKeyDown}
+            >
+              <div className={`hamburger hamburger--slider${menuOpen ? " is-active" : ""}`}>
+                <div className="hamburger-box">
+                  <div className="hamburger-inner"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -72,13 +80,13 @@ export default function Sidebar({ profile, active, onNavigate }) {
       <div className={`tokyo_tm_mobile_menu${menuOpen ? " opened" : ""}`}>
         <div className="menu_list w-full px-5 pt-[100px] text-right">
           <ul className="transition_link m-0 list-none">
-            {renderLinks("mb-[7px]", "font-heading text-black")}
+            {renderLinks("mb-[7px]", "font-heading text-[var(--fg)]")}
           </ul>
         </div>
       </div>
 
       {/* DESKTOP LEFT NAV */}
-      <div className="leftpart fixed z-[12] flex h-screen w-[450px] items-center bg-white px-[100px] max-xl:w-[350px] max-xl:px-[70px] max-lg:hidden">
+      <div className="leftpart fixed z-[12] flex h-screen w-[450px] items-center bg-[var(--bg)] px-[100px] max-xl:w-[350px] max-xl:px-[70px] max-lg:hidden">
         <div className="leftpart_inner h-auto w-full">
           <div className="logo">
             <a
@@ -88,7 +96,9 @@ export default function Sidebar({ profile, active, onNavigate }) {
                 go("home");
               }}
             >
-              <h3 className="font-poppins text-[31px] font-black tracking-[5px]">{profile.name.split(" ")[1]}</h3>
+              <h3 className="font-poppins text-[31px] font-black tracking-[5px] text-[var(--fg)]">
+                {profile.name.split(" ")[1]}
+              </h3>
             </a>
           </div>
           <div className="menu w-full py-[50px]">
@@ -96,8 +106,11 @@ export default function Sidebar({ profile, active, onNavigate }) {
               {renderLinks("float-left w-full", "inline-block font-medium font-heading transition-colors duration-300 ease-in-out")}
             </ul>
           </div>
+          <div className="mb-5 flex w-full">
+            <ThemeToggle />
+          </div>
           <div className="copyright w-full">
-            <p className="font-heading text-[12px] leading-[25px] text-[#999]">
+            <p className="font-heading text-[12px] leading-[25px] text-[var(--fg-faint)]">
               &copy; {new Date().getFullYear()} {profile.name}
             </p>
           </div>

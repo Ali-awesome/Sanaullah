@@ -55,6 +55,18 @@ describe("BlogPost entity", () => {
   it("rejects a missing summary", () => {
     expect(() => new BlogPost({ ...base, summary: "" })).toThrow(DomainValidationError);
   });
+
+  it("keeps safe rich-text formatting but strips disallowed tags/attributes from the summary", () => {
+    const post = new BlogPost({
+      ...base,
+      summary: '<p>Built with <strong>React</strong>.</p><script>alert(1)</script><img src=x onerror=alert(2)>',
+    });
+    expect(post.summary).toBe("<p>Built with <strong>React</strong>.</p>");
+  });
+
+  it("rejects a summary that's only empty rich-text markup", () => {
+    expect(() => new BlogPost({ ...base, summary: "<p><br></p>" })).toThrow(DomainValidationError);
+  });
 });
 
 describe("GalleryPhoto entity", () => {
@@ -79,6 +91,15 @@ describe("GalleryPhoto entity", () => {
 
     const described = new GalleryPhoto({ name: "Sunset", image: "/img/portfolio/3.jpg", description: "Golden hour." });
     expect(described.description).toBe("Golden hour.");
+  });
+
+  it("sanitizes rich-text formatting in the description", () => {
+    const photo = new GalleryPhoto({
+      name: "Sunset",
+      image: "/img/portfolio/3.jpg",
+      description: '<p>Shot at <em>golden hour</em>.</p><script>alert(1)</script>',
+    });
+    expect(photo.description).toBe("<p>Shot at <em>golden hour</em>.</p>");
   });
 });
 
@@ -120,6 +141,18 @@ describe("PortfolioProject entity", () => {
 
   it("rejects a missing summary", () => {
     expect(() => new PortfolioProject({ ...base, summary: "" })).toThrow(DomainValidationError);
+  });
+
+  it("keeps safe rich-text formatting but strips disallowed tags from the summary", () => {
+    const project = new PortfolioProject({
+      ...base,
+      summary: "<ul><li>Analyzed data</li></ul><iframe src=evil.com></iframe>",
+    });
+    expect(project.summary).toBe("<ul><li>Analyzed data</li></ul>");
+  });
+
+  it("rejects a summary that's only empty rich-text markup", () => {
+    expect(() => new PortfolioProject({ ...base, summary: "<p></p>" })).toThrow(DomainValidationError);
   });
 });
 

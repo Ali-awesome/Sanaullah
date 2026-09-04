@@ -35,17 +35,17 @@ export default function Home({ profile }) {
             <div className="social w-full float-left">
               <ul className="m-0 list-none">
                 <li className="mr-4 inline-block last:mr-0">
-                  <a href={`mailto:${profile.email}`} aria-label="Email" className="text-[20px] text-black">
+                  <a href={`mailto:${profile.email}`} aria-label="Email" className="text-[20px] text-[var(--fg)]">
                     <FaEnvelope />
                   </a>
                 </li>
                 <li className="mr-4 inline-block last:mr-0">
-                  <a href={profile.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn" className="text-[20px] text-black">
+                  <a href={profile.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn" className="text-[20px] text-[var(--fg)]">
                     <FaLinkedin />
                   </a>
                 </li>
                 <li className="mr-4 inline-block last:mr-0">
-                  <a href={profile.github} target="_blank" rel="noreferrer" aria-label="GitHub" className="text-[20px] text-black">
+                  <a href={profile.github} target="_blank" rel="noreferrer" aria-label="GitHub" className="text-[20px] text-[var(--fg)]">
                     <FaGithub />
                   </a>
                 </li>

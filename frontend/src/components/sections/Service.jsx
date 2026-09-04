@@ -25,11 +25,11 @@ export default function Service({ profile }) {
             <ul className="w-[calc(100%+2.5rem)] -ml-10 flex list-none flex-wrap max-sm:ml-0 max-sm:w-full">
               {profile.services.map((s, i) => (
                 <li key={s.number} className="mb-10 w-1/3 pl-10 max-md:w-1/2 max-sm:w-full max-sm:pl-0">
-                  <div className="list_inner group flex h-full flex-col border border-black/10 bg-white px-[30px] pb-10 pt-[45px] transition-all duration-300 ease-in-out hover:border-black/20">
-                    <span className="number relative mb-[25px] inline-block h-[60px] w-[60px] rounded-full bg-black/3 text-center font-heading font-bold leading-[60px] text-black transition-colors duration-300 ease-in-out group-hover:bg-black/8">
+                  <div className="list_inner group flex h-full flex-col border border-[var(--fg)]/10 bg-[var(--surface)] px-[30px] pb-10 pt-[45px] transition-all duration-300 ease-in-out hover:border-[var(--fg)]/20">
+                    <span className="number relative mb-[25px] inline-block h-[60px] w-[60px] rounded-full bg-[var(--fg)]/[0.03] text-center font-heading font-bold leading-[60px] text-[var(--fg)] transition-colors duration-300 ease-in-out group-hover:bg-[var(--fg)]/[0.08]">
                       {s.number}
                     </span>
-                    <h3 className="title mb-[15px] text-lg font-bold text-black">{s.title}</h3>
+                    <h3 className="title mb-[15px] text-lg font-bold text-[var(--fg)]">{s.title}</h3>
                     <p className="text line-clamp-3 min-h-[4.5em]">{s.text}</p>
                     <div className="tokyo_tm_read_more mt-auto pt-5">
                       <a
@@ -100,15 +100,15 @@ export default function Service({ profile }) {
           portalTarget
         )}
 
-      <div className="tokyo_tm_partners float-left w-full bg-white py-[100px]">
+      <div className="tokyo_tm_partners float-left w-full bg-[var(--bg)] py-[100px]">
         <div className="container">
           <div className="tokyo_section_title mb-10 w-full">
             <h3 className="text-xl font-bold">Tools &amp; Platforms</h3>
           </div>
-          <div className="partners_inner tool_badges flex flex-wrap justify-center gap-3 overflow-hidden border-2 border-[#eee] p-6">
+          <div className="partners_inner tool_badges flex flex-wrap justify-center gap-3 overflow-hidden border-2 border-[var(--border)] p-6">
             {["SQL", "Python", "Power BI", "Excel", "Git", "MongoDB", "Firebase", "ClickUp"].map((t) => (
               <span
-                className="tool_badge rounded-full border border-black/15 px-[18px] py-2 text-[13px] tracking-wide"
+                className="tool_badge rounded-full border border-[var(--fg)]/15 px-[18px] py-2 text-[13px] tracking-wide"
                 key={t}
               >
                 {t}
@@ -127,7 +127,7 @@ export default function Service({ profile }) {
             <ul className="-ml-10 list-none max-sm:ml-0">
               {profile.impactStats.map((stat) => (
                 <li key={stat.label} className="float-left mb-10 w-1/3 pl-10 max-sm:w-full max-sm:pl-0">
-                  <div className="list_inner relative border border-black/10 px-5 py-10 text-center">
+                  <div className="list_inner relative border border-[var(--fg)]/10 px-5 py-10 text-center">
                     <h3 className="mb-[3px] text-xl font-semibold">{stat.value}</h3>
                     <span>{stat.label}</span>
                   </div>

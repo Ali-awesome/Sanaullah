@@ -1,4 +1,5 @@
 import { DomainValidationError } from "./ContactMessage.js";
+import { sanitizeRichText } from "./sanitizeRichText.js";
 
 /**
  * Domain entity: GalleryPhoto (shown under the Portfolio section's "All"
@@ -17,8 +18,9 @@ export class GalleryPhoto {
     this.name = cleanName;
     this.image = cleanImage;
     // Optional — shown in the lightbox when a visitor clicks the photo;
-    // not every photo needs one.
-    this.description = (description || "").trim();
+    // not every photo needs one. Authored as rich text (the admin panel's
+    // RichTextEditor), so this is sanitized HTML, not plain text.
+    this.description = sanitizeRichText(description).html;
     this.createdAt = new Date();
   }
 }

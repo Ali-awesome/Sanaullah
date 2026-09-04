@@ -58,6 +58,24 @@
       }
     </style>
 
+    <!-- Applies a saved theme choice to <html> before the app's own JS
+         bundle loads and before first paint, so a returning visitor who
+         chose dark never sees a flash of the light theme first. See
+         ThemeToggle.jsx, which reads/writes the same localStorage key and
+         `data-theme` attribute after mount. Defaults to light (no
+         attribute) for a first-time visitor — matches the toggle's own
+         default, see that file for why it doesn't follow system
+         preference. -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("portfolio_theme") === "dark") {
+            document.documentElement.setAttribute("data-theme", "dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
