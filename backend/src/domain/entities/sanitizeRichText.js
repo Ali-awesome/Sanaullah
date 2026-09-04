@@ -1,4 +1,14 @@
-import { FilterXSS, safeAttrValue } from "xss";
+// `xss` is a CommonJS module. Node's static analysis of its named exports
+// (cjs-module-lexer) doesn't reliably detect all of them — `safeAttrValue`
+// specifically was missing, which crashed every route in production with
+// "SyntaxError: The requested module 'xss' does not provide an export
+// named 'safeAttrValue'" (this only surfaces via real ESM `import`, not
+// plain `require()`, which is why local testing via `require()` alone
+// didn't catch it). Importing the default export and destructuring from it
+// — Node's own suggested fix for this exact error — always works
+// regardless of what the lexer manages to detect.
+import xssPkg from "xss";
+const { FilterXSS, safeAttrValue } = xssPkg;
 
 // Tags/attributes the admin's rich text editor (Tiptap, using its
 // StarterKit — see frontend/src/components/admin/RichTextEditor.jsx) can
